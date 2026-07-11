@@ -1666,10 +1666,11 @@ function renderQuestion(){
   const optContainer=document.getElementById('options');
   optContainer.innerHTML='';
   const letters=['A','B','C','D'];
-  q.opciones.forEach((opt,i)=>{
+  const opcionesArr=Array.isArray(q.opciones)?q.opciones:letters.map(l=>q.opciones[l]||'');
+  opcionesArr.forEach((opt,i)=>{
     const btn=document.createElement('button');
     btn.className='option';
-    const text=opt.replace(/^[A-D]\. */,'');
+    const text=(opt||'').replace(/^[A-D]\. */,'');
     btn.innerHTML=`<span class="letter">${letters[i]}</span><span>${text}</span>`;
     if(state.answers[currentIdx]!==null){
       btn.disabled=true;
