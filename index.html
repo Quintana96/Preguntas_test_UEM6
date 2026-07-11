@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1d4ed8">
+<title>Entrenamiento Módulo 7 – Modelado y Docking Molecular</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#667085;--primary:#1d4ed8;--primary-soft:#dbeafe;--ok:#15803d;--okbg:#dcfce7;--bad:#b91c1c;--badbg:#fee2e2;--warn:#a16207;--warnbg:#fef3c7;--border:#e5e7eb}
+*{box-sizing:border-box}html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;min-height:100dvh;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(135deg,#dbeafe,#f8fafc 55%,#eef2ff);color:var(--text);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+button{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.app{width:min(1040px,94vw);margin:0 auto;padding:30px 0 calc(30px + env(safe-area-inset-bottom))}
+.hero,.card,.stat{background:var(--card);border:1px solid var(--border);box-shadow:0 18px 42px #1f293714}
+.hero{border-radius:26px;padding:28px;margin-bottom:16px}
+.hero h1{margin:0 0 8px;font-size:clamp(1.5rem,4vw,2.2rem);letter-spacing:-.03em}
+.hero p{margin:0 0 16px;color:var(--muted);font-size:1.02rem;line-height:1.55}
+.topic-selector{margin-top:14px}
+.topic-selector h3{margin:0 0 10px;font-size:1rem;color:var(--muted)}
+.topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;max-height:320px;overflow-y:auto;padding:4px;border:1px solid var(--border);border-radius:14px}
+.topic-chip{display:flex;align-items:center;gap:8px;padding:8px 12px;border:2px solid var(--border);border-radius:10px;background:white;cursor:pointer;font-size:.9rem;transition:border-color .15s,background .15s;user-select:none}
+.topic-chip:hover{border-color:#93c5fd;background:#eff6ff}
+.topic-chip.selected{border-color:var(--primary);background:var(--primary-soft);color:#1e3a8a;font-weight:700}
+.topic-chip input{display:none}
+.topic-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.exam-info{font-size:.9rem;color:var(--muted);margin-top:8px;min-height:1.3em}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+.stat{border-radius:18px;padding:16px}
+.label{color:var(--muted);font-size:.84rem}
+.value{font-size:1.32rem;font-weight:850}
+.card{border-radius:26px;padding:26px}
+.topline{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.pill{background:var(--primary-soft);color:#1e3a8a;border-radius:999px;padding:8px 12px;font-weight:800;font-size:.9rem}
+.pill.facil{background:#dcfce7;color:#166534}
+.pill.medio{background:#fef3c7;color:#92400e}
+.pill.dificil{background:#fee2e2;color:#991b1b}
+.progress-wrap{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:12px 0 22px}
+.progress{height:100%;background:var(--primary);width:0%;transition:.25s}
+.question-title{margin:0 0 18px;font-size:clamp(1.1rem,2.5vw,1.5rem);line-height:1.34}
+.options{display:grid;gap:12px}
+.option{width:100%;display:flex;align-items:flex-start;gap:12px;text-align:left;padding:15px 16px;border:2px solid var(--border);border-radius:16px;background:white;cursor:pointer;font-size:1rem;line-height:1.45;min-height:50px}
+.option:hover:not(:disabled){border-color:#93c5fd;background:#eff6ff}
+.option:disabled{cursor:default}
+.letter{flex:0 0 auto;width:31px;height:31px;display:grid;place-items:center;border-radius:10px;background:#f3f4f6;font-weight:900}
+.correct{border-color:var(--ok)!important;background:var(--okbg)!important}
+.incorrect{border-color:var(--bad)!important;background:var(--badbg)!important}
+.feedback{margin-top:18px;padding:16px;border-radius:16px;border:1px solid var(--border);background:#f9fafb;display:none;line-height:1.5}
+.feedback.visible{display:block}
+.feedback.ok{border-color:#86efac;background:var(--okbg)}
+.feedback.bad{border-color:#fecaca;background:var(--badbg)}
+.controls{display:flex;justify-content:space-between;gap:12px;margin-top:22px;flex-wrap:wrap}
+.action{border:0;border-radius:14px;padding:12px 18px;font-weight:900;cursor:pointer;font-size:.98rem}
+.action:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:var(--primary);color:#fff}
+.secondary{background:#e5e7eb;color:#111827}
+.ghost{background:transparent;color:var(--primary);border:1px solid #93c5fd!important}
+.results{display:none}
+.results.visible{display:block}
+.score-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:20px 0}
+.score-box{border:1px solid var(--border);border-radius:18px;padding:18px;background:#f9fafb}
+.big{font-size:clamp(2rem,6vw,3rem);font-weight:950}
+.notice{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:16px;padding:14px 16px;margin-top:16px}
+.review{margin-top:24px;display:grid;gap:12px}
+.review-item{border:1px solid var(--border);border-radius:16px;padding:14px;background:#fff;line-height:1.48}
+.review-item.correct{border-color:#86efac;background:#f0fdf4}
+.review-item.incorrect{border-color:#fecaca;background:#fef2f2}
+.review-item.unanswered{border-color:#facc15;background:#fefce8}
+.hidden{display:none!important}
+.diff-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.diff-box{border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center}
+.diff-box .label{font-size:.78rem}
+.diff-box .value{font-size:1.4rem;font-weight:850}
+@media(max-width:720px){
+.app{width:100%;padding:14px 10px calc(14px + env(safe-area-inset-bottom))}
+.hero,.card{padding:18px 14px;border-radius:20px}
+.hero h1{font-size:1.32rem;line-height:1.18}
+.stats{position:sticky;top:0;z-index:10;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0 12px;padding:8px 0;background:linear-gradient(135deg,#dbeafe,#f8fafc 55%,#eef2ff)}
+.stat{border-radius:14px;padding:9px 7px;min-width:0}
+.label{font-size:.68rem;white-space:nowrap}
+.value{font-size:.95rem;line-height:1.1;word-break:break-word}
+.pill{font-size:.78rem;padding:7px 10px}
+.question-title{font-size:1.08rem}
+.option{padding:13px 12px;border-radius:14px;font-size:.96rem}
+.letter{width:28px;height:28px;border-radius:9px}
+.controls{position:sticky;bottom:0;z-index:8;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-left:-14px;margin-right:-14px;margin-bottom:-18px;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:rgba(255,255,255,.94);border-top:1px solid var(--border);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:0 0 20px 20px}
+.controls .action{width:100%;padding:12px 10px;font-size:.92rem}
+#nextBtn,#restartBtn{grid-column:1 / -1}
+.score-grid{grid-template-columns:1fr}
+.option:hover:not(:disabled){border-color:var(--border);background:white}
+.topics-grid{grid-template-columns:1fr}
+}
+@media(max-width:420px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.hero h1{font-size:1.2rem}}
+</style>
+</head>
+<body>
+<main class="app">
+  <section class="hero" id="homeSection">
+    <h1>Entrenamiento Módulo 7 – Modelado y Docking Molecular</h1>
+    <p>102 preguntas tipo test con 4 opciones. Penalización: acierto +1, fallo −0,25, sin responder 0.<br>Selecciona uno o varios temas para generar tu examen.</p>
+    <div class="topic-selector">
+      <h3>Temas disponibles</h3>
+      <div class="topics-grid" id="topicsGrid"></div>
+      <div class="topic-actions">
+        <button class="action secondary" id="selectAllBtn" type="button">Seleccionar todos</button>
+        <button class="action secondary" id="clearAllBtn" type="button">Limpiar selección</button>
+        <button class="action primary" id="startBtn" type="button" disabled>Generar examen</button>
+      </div>
+      <div class="exam-info" id="examInfo">Selecciona al menos un tema para continuar.</div>
+    </div>
+  </section>
+
+  <section class="stats hidden" id="statsSection">
+    <div class="stat"><div class="label">Pregunta</div><div class="value" id="questionCounter"></div></div>
+    <div class="stat"><div class="label">Aciertos</div><div class="value" id="correctCounter">0</div></div>
+    <div class="stat"><div class="label">Fallos</div><div class="value" id="wrongCounter">0</div></div>
+    <div class="stat"><div class="label">Sin responder</div><div class="value" id="unansweredCounter">0</div></div>
+  </section>
+
+  <section class="card hidden" id="quizCard">
+    <div class="topline">
+      <span class="pill" id="topicPill"></span>
+      <span class="pill" id="diffPill"></span>
+      <span class="pill" id="progressText"></span>
+    </div>
+    <div class="progress-wrap"><div class="progress" id="progressBar"></div></div>
+    <h2 class="question-title" id="questionText"></h2>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="controls">
+      <button class="action secondary" id="prevBtn">Anterior</button>
+      <button class="action ghost" id="skipBtn">Dejar sin responder</button>
+      <button class="action primary" id="nextBtn">Siguiente</button>
+    </div>
+  </section>
+
+  <section class="card hidden results" id="resultsCard">
+    <h2 style="margin:0 0 8px">Resultados del examen</h2>
+    <div class="score-grid">
+      <div class="score-box"><div class="label">Puntuación</div><div class="big" id="finalScore"></div></div>
+      <div class="score-box"><div class="label">Nota (sobre 10)</div><div class="big" id="finalGrade"></div></div>
+      <div class="score-box"><div class="label">Aciertos</div><div class="big" id="finalCorrect"></div></div>
+      <div class="score-box"><div class="label">Fallos</div><div class="big" id="finalWrong"></div></div>
+    </div>
+    <div class="diff-summary">
+      <div class="diff-box"><div class="label">🟢 Fácil</div><div class="value" id="resFacil"></div></div>
+      <div class="diff-box"><div class="label">🟡 Medio</div><div class="value" id="resMedio"></div></div>
+      <div class="diff-box"><div class="label">🔴 Difícil</div><div class="value" id="resDificil"></div></div>
+    </div>
+    <div class="notice" id="noticeBox" style="display:none"></div>
+    <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+      <button class="action primary" id="restartBtn">Nuevo examen</button>
+      <button class="action secondary" id="reviewBtn">Revisar respuestas</button>
+    </div>
+    <div class="review hidden" id="reviewSection"></div>
+  </section>
+</main>
+<script>
+const banco=[
+  {
+    "id": "M7_001",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Cuál fue el primer fármaco desarrollado combinando métodos computacionales y experimentales?",
+    "opciones": {
+      "A": "Penicilina",
+      "B": "Imatinib (Glivec)",
+      "C": "Aspirina",
+      "D": "Taxol"
+    },
+    "correcta": "B",
+    "explicacion": "El imatinib (Glivec) es considerado el primer fármaco en cuyo desarrollo se combinaron de forma exitosa métodos computacionales y experimentales, constituyendo un hito en el diseño racional de fármacos."
+  },
+  {
+    "id": "M7_002",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "facil",
+    "pregunta": "¿En qué año recibieron Karplus, Levitt y Warshel el Premio Nobel de Química por el desarrollo de métodos QM/MM?",
+    "opciones": {
+      "A": "1998",
+      "B": "2005",
+      "C": "2013",
+      "D": "2017"
+    },
+    "correcta": "C",
+    "explicacion": "Martin Karplus, Michael Levitt y Arieh Warshel recibieron el Premio Nobel de Química en 2013 por el desarrollo de modelos multiescala para sistemas químicos complejos (métodos QM/MM aplicados a reacciones enzimáticas)."
+  },
+  {
+    "id": "M7_003",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Qué aproximación permite tratar los núcleos y los electrones de forma independiente en mecánica cuántica?",
+    "opciones": {
+      "A": "Aproximación de Lennard-Jones",
+      "B": "Aproximación de Born-Oppenheimer",
+      "C": "Aproximación de Hartree-Fock",
+      "D": "Aproximación de campo de fuerzas"
+    },
+    "correcta": "B",
+    "explicacion": "La aproximación de Born-Oppenheimer permite separar el movimiento de los núcleos del de los electrones, ya que los núcleos son mucho más pesados y se mueven mucho más lentamente. Esto simplifica enormemente la solución de la ecuación de Schrödinger."
+  },
+  {
+    "id": "M7_004",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Cuál fue la primera proteína simulada mediante dinámica molecular y en qué año se realizó?",
+    "opciones": {
+      "A": "Mioglobina, en 1979",
+      "B": "Hemoglobina, en 1980",
+      "C": "BPTI (inhibidor pancreático de tripsina bovina), en 1975",
+      "D": "Lisozima, en 1977"
+    },
+    "correcta": "C",
+    "explicacion": "La primera simulación de dinámica molecular de una proteína se realizó en 1975 sobre el BPTI (inhibidor pancreático de tripsina bovina) durante 9.2 picosegundos. Fue un hito fundamental en el campo del modelado molecular."
+  },
+  {
+    "id": "M7_005",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Cuántos núcleos de procesamiento tiene aproximadamente el supercomputador Fugaku?",
+    "opciones": {
+      "A": "Más de 150.000",
+      "B": "Más de 1.000.000",
+      "C": "Más de 7.000.000",
+      "D": "Más de 500.000"
+    },
+    "correcta": "C",
+    "explicacion": "El supercomputador Fugaku (Japón) cuenta con más de 7 millones de núcleos de procesamiento, siendo uno de los más potentes del mundo. El MareNostrum, en España, tiene más de 150.000 núcleos."
+  },
+  {
+    "id": "M7_006",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "medio",
+    "pregunta": "En los métodos híbridos QM/MM, ¿cómo se trata la región del sitio activo de una enzima?",
+    "opciones": {
+      "A": "Con mecánica molecular (MM)",
+      "B": "Con mecánica cuántica (QM)",
+      "C": "Con dinámica molecular clásica",
+      "D": "Con métodos semiempíricos exclusivamente"
+    },
+    "correcta": "B",
+    "explicacion": "En los métodos QM/MM, la región del sitio activo donde ocurre la reacción química se trata con mecánica cuántica (QM) para describir con precisión la formación y ruptura de enlaces, mientras que el entorno proteico se trata con la más económica mecánica molecular (MM)."
+  },
+  {
+    "id": "M7_007",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Qué Premio Nobel de Química de 1998 reconoció el desarrollo de la química cuántica computacional?",
+    "opciones": {
+      "A": "Linus Pauling y Dorothy Hodgkin",
+      "B": "Walter Kohn y John A. Pople",
+      "C": "Karplus, Levitt y Warshel",
+      "D": "Perutz y Kendrew"
+    },
+    "correcta": "B",
+    "explicacion": "El Premio Nobel de Química de 1998 fue otorgado a Walter Kohn (por el desarrollo de la teoría del funcional de la densidad, DFT) y a John A. Pople (por el desarrollo de métodos computacionales en química cuántica)."
+  },
+  {
+    "id": "M7_008",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Cuál de los siguientes términos NO forma parte de la ecuación de energía potencial en un campo de fuerzas de mecánica molecular clásica?",
+    "opciones": {
+      "A": "Energía de enlaces (E_enlaces)",
+      "B": "Energía de ángulos (E_ángulos)",
+      "C": "Energía de interacciones cuánticas (E_QM)",
+      "D": "Energía de van der Waals (E_vdW)"
+    },
+    "correcta": "C",
+    "explicacion": "La ecuación de energía en mecánica molecular clásica es E = ΣE_enlaces + ΣE_ángulos + ΣE_dihedros + Σ(E_elec + E_vdW). No incluye términos cuánticos explícitos; esa es precisamente la limitación de la mecánica molecular frente a los métodos QM/MM."
+  },
+  {
+    "id": "M7_009",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Cuál es la principal ventaja de la mecánica molecular (MM) frente a la mecánica cuántica (QM) en el modelado de sistemas biológicos grandes?",
+    "opciones": {
+      "A": "Permite describir la formación y ruptura de enlaces covalentes",
+      "B": "Es mucho más rápida computacionalmente y permite simular sistemas con millones de átomos",
+      "C": "Proporciona mayor precisión en el cálculo de propiedades electrónicas",
+      "D": "No requiere ningún parámetro empírico"
+    },
+    "correcta": "B",
+    "explicacion": "La mecánica molecular (MM) usa potenciales clásicos parametrizados, lo que la hace órdenes de magnitud más rápida que los métodos cuánticos, permitiendo simular sistemas biológicos con millones de átomos durante tiempos de microsegundos o incluso milisegundos. Su desventaja es que no puede describir la ruptura o formación de enlaces."
+  },
+  {
+    "id": "M7_010",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Cuál de las siguientes técnicas experimentales proporciona información de la estructura molecular a resolución atómica en estado sólido?",
+    "opciones": {
+      "A": "Espectroscopía de masas",
+      "B": "Cristalografía de rayos X",
+      "C": "Microscopía de fluorescencia",
+      "D": "Citometría de flujo"
+    },
+    "correcta": "B",
+    "explicacion": "La cristalografía de rayos X es la técnica experimental principal para determinar estructuras moleculares a resolución atómica en estado sólido (cristal). Junto con la RMN (en solución) y la crioEM (en solución/partículas), son las tres técnicas fundamentales para determinar estructuras de biomoléculas."
+  },
+  {
+    "id": "M7_011",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Cuál es la escala temporal aproximada del estado de transición en una reacción química enzimática?",
+    "opciones": {
+      "A": "10⁻³ segundos",
+      "B": "10⁻⁹ segundos",
+      "C": "10⁻¹² segundos",
+      "D": "10⁻¹⁵ segundos"
+    },
+    "correcta": "D",
+    "explicacion": "El estado de transición de una reacción química tiene una vida media del orden de 10⁻¹⁵ segundos (femtosegundos), lo que lo hace indetectable experimentalmente de forma directa. Esta escala temporal es accesible mediante simulaciones de dinámica molecular."
+  },
+  {
+    "id": "M7_012",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Qué base de datos almacena las estructuras tridimensionales de proteínas, ácidos nucleicos y otras biomoléculas?",
+    "opciones": {
+      "A": "GenBank",
+      "B": "UniProt",
+      "C": "Protein Data Bank (PDB)",
+      "D": "KEGG"
+    },
+    "correcta": "C",
+    "explicacion": "El Protein Data Bank (PDB), accesible en www.rcsb.org, es el repositorio mundial de estructuras tridimensionales de biomoléculas determinadas experimentalmente (principalmente por cristalografía de rayos X, RMN y crioEM)."
+  },
+  {
+    "id": "M7_013",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué ley de movimiento constituye la base de la dinámica molecular clásica?",
+    "opciones": {
+      "A": "Primera ley de la termodinámica",
+      "B": "Segunda ley de Newton (F = ma)",
+      "C": "Ecuación de Schrödinger",
+      "D": "Ley de Coulomb"
+    },
+    "correcta": "B",
+    "explicacion": "La dinámica molecular clásica se basa en la segunda ley de Newton (F = ma). A partir de las fuerzas derivadas del campo de fuerzas, se integran numéricamente las ecuaciones de movimiento para cada átomo, obteniendo sus posiciones y velocidades en función del tiempo."
+  },
+  {
+    "id": "M7_014",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Cuántos modelos de agua explícita existen en los campos de fuerzas más usados y cuál es el más sencillo?",
+    "opciones": {
+      "A": "Solo uno: TIP3P",
+      "B": "Tres principales: TIP3P, TIP4P y TIP5P; el más sencillo es TIP3P",
+      "C": "Dos: TIP3P y SPC; el más sencillo es SPC",
+      "D": "Cuatro: TIP3P, TIP4P, TIP5P y SPC/E; el más sencillo es TIP5P"
+    },
+    "correcta": "B",
+    "explicacion": "Los modelos de agua más utilizados en dinámica molecular son TIP3P (3 puntos de interacción), TIP4P (4 puntos) y TIP5P (5 puntos). TIP3P es el más simple y computacionalmente menos costoso, aunque TIP4P y TIP5P reproducen mejor ciertas propiedades del agua líquida."
+  },
+  {
+    "id": "M7_015",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Cómo se denomina la representación molecular en la que las coordenadas de cada átomo se expresan en referencia a un sistema de ejes cartesianos (x, y, z)?",
+    "opciones": {
+      "A": "Coordenadas internas o Z-matrix",
+      "B": "Coordenadas cartesianas",
+      "C": "Coordenadas generalizadas",
+      "D": "Coordenadas de Ramachandran"
+    },
+    "correcta": "B",
+    "explicacion": "Las coordenadas cartesianas expresan la posición de cada átomo mediante tres valores (x, y, z) en un sistema de referencia ortogonal. Alternativamente, las coordenadas internas (Z-matrix) describen la geometría molecular mediante distancias de enlace, ángulos y diedros."
+  },
+  {
+    "id": "M7_016",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué métodos cuánticos se denominan 'ab initio' y cuál es su característica principal?",
+    "opciones": {
+      "A": "Métodos que usan parámetros empíricos ajustados a datos experimentales",
+      "B": "Métodos basados solo en constantes físicas fundamentales, sin parámetros empíricos",
+      "C": "Métodos que simplifican la función de onda usando solo orbitales de frontera",
+      "D": "Métodos de dinámica molecular basados en campos de fuerzas clásicos"
+    },
+    "correcta": "B",
+    "explicacion": "Los métodos ab initio ('desde el principio') calculan la energía y propiedades moleculares usando solo constantes físicas fundamentales (velocidad de la luz, masa del electrón, etc.), sin recurrir a parámetros ajustados empíricamente. Ejemplos: Hartree-Fock (HF), MP2, CISD, métodos DFT."
+  },
+  {
+    "id": "M7_017",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Cuál de los siguientes programas informáticos se usa principalmente para cálculos de estructura electrónica ab initio?",
+    "opciones": {
+      "A": "AMBER",
+      "B": "GROMACS",
+      "C": "GAMESS",
+      "D": "AutoDock"
+    },
+    "correcta": "C",
+    "explicacion": "GAMESS (General Atomic and Molecular Electronic Structure System) es un programa para cálculos de estructura electrónica ab initio (HF, DFT, MP2, CI). AMBER y GROMACS son paquetes de dinámica molecular clásica, y AutoDock es un programa de docking."
+  },
+  {
+    "id": "M7_018",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "dificil",
+    "pregunta": "En la representación Z-matrix de la molécula de agua, ¿qué parámetros se necesitan especificar para el segundo átomo de hidrógeno?",
+    "opciones": {
+      "A": "Solo la distancia O-H",
+      "B": "La distancia O-H y el ángulo H-O-H",
+      "C": "La distancia O-H, el ángulo H-O-H y el diedro",
+      "D": "Solo las coordenadas x, y, z"
+    },
+    "correcta": "C",
+    "explicacion": "En la Z-matrix, para definir completamente la posición del segundo átomo de hidrógeno del agua se necesita: la distancia O-H (0.96 Å), el ángulo H-O-H (104°) y un ángulo diedro de referencia (aunque en una molécula plana este puede ser 0). Para el primer H solo se necesita la distancia O-H."
+  },
+  {
+    "id": "M7_019",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Cuál es el ángulo de enlace H-O-H de la molécula de agua?",
+    "opciones": {
+      "A": "90°",
+      "B": "104.5°",
+      "C": "120°",
+      "D": "109.5°"
+    },
+    "correcta": "B",
+    "explicacion": "El ángulo de enlace H-O-H del agua es aproximadamente 104.5°, ligeramente inferior al ángulo tetraédrico ideal (109.5°) debido a la repulsión de los dos pares de electrones no enlazantes del oxígeno, que comprimen el ángulo de enlace."
+  },
+  {
+    "id": "M7_020",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué son los métodos semiempíricos en química computacional?",
+    "opciones": {
+      "A": "Métodos de dinámica molecular que usan campos de fuerzas parametrizados",
+      "B": "Métodos cuánticos que simplifican ciertas integrales y las sustituyen por parámetros empíricos",
+      "C": "Métodos de docking basados en potenciales de fuerza media",
+      "D": "Métodos estadísticos para análisis de trayectorias de MD"
+    },
+    "correcta": "B",
+    "explicacion": "Los métodos semiempíricos (AM1, PM3, PM6, MNDO) son métodos de estructura electrónica que simplifican ciertas integrales difíciles de calcular (de la teoría HF) y las sustituyen por parámetros ajustados a datos experimentales. Son más rápidos que los ab initio pero menos precisos."
+  },
+  {
+    "id": "M7_021",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "dificil",
+    "pregunta": "En la teoría del funcional de la densidad (DFT), ¿qué variable fundamental se usa para calcular la energía del sistema electrónico?",
+    "opciones": {
+      "A": "La función de onda multielectrónica Ψ(r₁, r₂, ..., rN)",
+      "B": "La densidad electrónica ρ(r)",
+      "C": "El hamiltoniano molecular H",
+      "D": "La matriz densidad de primer orden"
+    },
+    "correcta": "B",
+    "explicacion": "En la teoría del funcional de la densidad (DFT), la energía del sistema es un funcional de la densidad electrónica ρ(r), una función de solo 3 coordenadas espaciales. Esto la hace mucho más eficiente que los métodos de función de onda multielectrónica, que dependen de 3N coordenadas."
+  },
+  {
+    "id": "M7_022",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Cuál de los siguientes funcionales DFT incorpora un término de intercambio de Hartree-Fock con tres parámetros empíricos?",
+    "opciones": {
+      "A": "BP86",
+      "B": "BLYP",
+      "C": "B3LYP",
+      "D": "PBE"
+    },
+    "correcta": "C",
+    "explicacion": "B3LYP (Becke 3-parameter Lee-Yang-Parr) es un funcional híbrido DFT que mezcla el intercambio de Hartree-Fock con tres parámetros empíricos, desarrollado por Axel Becke. Es uno de los funcionales más utilizados en química computacional por su buena relación precisión/coste."
+  },
+  {
+    "id": "M7_023",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Cuál de los modelos de agua TIP tiene mayor número de sitios de interacción y, generalmente, mejor reproducción de propiedades del agua líquida?",
+    "opciones": {
+      "A": "TIP3P",
+      "B": "TIP4P",
+      "C": "TIP5P",
+      "D": "Todos reproducen igual de bien las propiedades del agua"
+    },
+    "correcta": "C",
+    "explicacion": "TIP5P tiene 5 sitios de interacción (2 hidrógenos + 1 oxígeno + 2 pares solitarios virtuales) y reproduce mejor propiedades como la densidad máxima a 4°C y la estructura de la primera capa de solvatación. Sin embargo, su mayor coste computacional hace que TIP3P y TIP4P sigan siendo más usados en simulaciones de proteínas."
+  },
+  {
+    "id": "M7_024",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Qué programa computacional fue desarrollado por Gaussian Inc. para cálculos de estructura electrónica?",
+    "opciones": {
+      "A": "AMBER",
+      "B": "NAMD",
+      "C": "Gaussian",
+      "D": "CHARMM"
+    },
+    "correcta": "C",
+    "explicacion": "Gaussian es uno de los programas más ampliamente utilizados para cálculos de química cuántica (ab initio, DFT, semiempíricos). Fue desarrollado originalmente por John Pople, Premio Nobel de Química 1998, y actualmente es mantenido por Gaussian Inc."
+  },
+  {
+    "id": "M7_025",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Cuál de las siguientes afirmaciones describe correctamente la simetría del punto C₂ᵥ de la molécula de agua?",
+    "opciones": {
+      "A": "La molécula de agua pertenece al grupo C₂ᵥ y posee un eje de rotación de orden 3",
+      "B": "La molécula de agua tiene simetría C₂ᵥ: un eje C₂ y dos planos de simetría perpendiculares",
+      "C": "C₂ᵥ indica que el agua es una molécula lineal",
+      "D": "El grupo C₂ᵥ implica que los dos hidrógenos son no equivalentes"
+    },
+    "correcta": "B",
+    "explicacion": "La molécula de agua pertenece al grupo puntual C₂ᵥ, que consta de: un eje de rotación C₂ (que bisecta el ángulo H-O-H), el plano molecular (σᵥ) y un segundo plano de simetría perpendicular al molecular (σᵥ'). Los dos hidrógenos son equivalentes por simetría."
+  },
+  {
+    "id": "M7_026",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "dificil",
+    "pregunta": "En los orbitales moleculares del agua, ¿cuáles son los orbitales de simetría b₁ y b₂?",
+    "opciones": {
+      "A": "El orbital b₁ es un orbital no enlazante p del oxígeno perpendicular al plano; el b₂ es un orbital enlazante π",
+      "B": "El b₁ corresponde al par no enlazante del oxígeno fuera del plano molecular; el b₂ es un orbital enlazante O-H",
+      "C": "Ambos son orbitales antienlazantes",
+      "D": "El b₁ es el HOMO y el b₂ es el LUMO en el agua"
+    },
+    "correcta": "B",
+    "explicacion": "En el agua (C₂ᵥ), el orbital b₁ es el par no enlazante del oxígeno orientado perpendicularmente al plano molecular (orbital p puro del O), y el b₂ es un orbital enlazante O-H de simetría antisimétrica respecto al eje C₂. El b₁ es el HOMO del agua."
+  },
+  {
+    "id": "M7_027",
+    "tema": "UA3 - Energía libre de unión",
+    "dificultad": "facil",
+    "pregunta": "¿Cuál es la ecuación termodinámica que relaciona la energía libre de unión con la entalpía y la entropía?",
+    "opciones": {
+      "A": "ΔG = ΔH + TΔS",
+      "B": "ΔG = ΔH - TΔS",
+      "C": "ΔG = ΔH / TΔS",
+      "D": "ΔG = TΔS - ΔH"
+    },
+    "correcta": "B",
+    "explicacion": "La ecuación de Gibbs-Helmholtz establece que ΔG = ΔH - TΔS. Para un fármaco que se une a su diana, ΔG de unión debe ser negativo (unión espontánea). Puede lograrse mediante entalpía favorable (ΔH negativo, interacciones atractivas) y/o entropía favorable (ΔS positivo, p.ej. efecto hidrofóbico)."
+  },
+  {
+    "id": "M7_028",
+    "tema": "UA3 - Energía libre de unión",
+    "dificultad": "facil",
+    "pregunta": "¿Qué relación existe entre la constante de afinidad (Kafinidad) y la energía libre de unión (ΔGunión)?",
+    "opciones": {
+      "A": "Kafinidad = ΔGunión / RT",
+      "B": "Kafinidad = exp(-ΔGunión/RT)",
+      "C": "Kafinidad = -RT ln(ΔGunión)",
+      "D": "Kafinidad = ΔGunión × RT"
+    },
+    "correcta": "B",
+    "explicacion": "La constante de afinidad es función de la constante de equilibrio (Keq = exp(-ΔGunión/RT)), que a su vez se relaciona con la constante de disociación Kd o la Ki. Un ΔGunión más negativo indica mayor afinidad y mayor Keq."
+  },
+  {
+    "id": "M7_029",
+    "tema": "UA3 - Energía libre de unión",
+    "dificultad": "medio",
+    "pregunta": "¿Qué componentes conforman la energía libre de solvatación (ΔGsolv)?",
+    "opciones": {
+      "A": "Solo energía electrostática y van der Waals",
+      "B": "Energía de cavitación (ΔGcav), van der Waals (ΔGvdW) y electrostática (ΔGelec)",
+      "C": "Energía de enlace de hidrógeno y energía iónica",
+      "D": "Entalpía de fusión y entropía conformacional"
+    },
+    "correcta": "B",
+    "explicacion": "La energía libre de solvatación se descompone en tres términos: ΔGsolv = ΔGcav + ΔGvdW + ΔGelec. La cavitación representa el coste de crear la cavidad en el solvente; el término vdW recoge las interacciones de dispersión con el solvente; el término electrostático incluye la polarización del solvente por el soluto."
+  },
+  {
+    "id": "M7_030",
+    "tema": "UA3 - Energía libre de unión",
+    "dificultad": "medio",
+    "pregunta": "¿Qué ventaja ofrecen los modelos de solvatación implícita frente a los modelos de solvatación explícita?",
+    "opciones": {
+      "A": "Mayor precisión en la descripción de puentes de hidrógeno con el solvente",
+      "B": "Menor coste computacional al no representar individualmente las moléculas de agua",
+      "C": "Mejor descripción del efecto hidrofóbico a nivel atómico",
+      "D": "Permiten simular la dinámica del solvente con mayor detalle"
+    },
+    "correcta": "B",
+    "explicacion": "Los modelos de solvatación implícita (como GB/SA o Poisson-Boltzmann) representan el solvente como un medio continuo con propiedades dieléctricas, evitando simular las miles de moléculas de agua explícitamente. Esto reduce enormemente el coste computacional, aunque a expensas de menor precisión en la descripción de efectos locales del solvente."
+  },
+  {
+    "id": "M7_031",
+    "tema": "UA3 - Energía libre de unión",
+    "dificultad": "dificil",
+    "pregunta": "¿Qué es un ciclo termodinámico en el contexto del cálculo de energías libres de unión?",
+    "opciones": {
+      "A": "Un ciclo de minimización de energía que garantiza la convergencia al mínimo global",
+      "B": "Una estrategia que conecta estados mediante transformaciones termodinámicamente equivalentes, permitiendo calcular diferencias de ΔG usando la propiedad de función de estado",
+      "C": "Un protocolo de calentamiento y enfriamiento usado en recocido simulado (simulated annealing)",
+      "D": "Un bucle iterativo de refinamiento estructural en cristalografía"
+    },
+    "correcta": "B",
+    "explicacion": "Un ciclo termodinámico explota que ΔG es una función de estado (su valor no depende del camino seguido). Conectando distintos estados (p.ej. ligando A→B en fase gas y en proteína), se puede calcular diferencias de afinidad de unión mediante perturbaciones de energía libre (FEP) o integración termodinámica."
+  },
+  {
+    "id": "M7_032",
+    "tema": "UA3 - Energía libre de unión",
+    "dificultad": "facil",
+    "pregunta": "¿Qué componente de ΔG de unión suele ser el principal responsable de la unión de ligandos no polares (hidrofóbicos) a proteínas?",
+    "opciones": {
+      "A": "El término entálpico (ΔH), por formación de puentes de hidrógeno",
+      "B": "El término entrópico (-TΔS), principalmente por efecto hidrofóbico",
+      "C": "Las interacciones electrostáticas ion-dipolo",
+      "D": "La formación de enlaces covalentes con la proteína"
+    },
+    "correcta": "B",
+    "explicacion": "Para ligandos hidrofóbicos, la fuerza impulsora de la unión es principalmente el efecto hidrofóbico: al enterrarse superficies no polares, se liberan moléculas de agua ordenadas alrededor de estas superficies, lo que genera un aumento de entropía del sistema (ΔS > 0, término -TΔS negativo, favorable para ΔG)."
+  },
+  {
+    "id": "M7_033",
+    "tema": "UA3 - Energía libre de unión",
+    "dificultad": "dificil",
+    "pregunta": "¿Por qué razón la pérdida de entropía conformacional del ligando al unirse a la proteína es un factor desfavorable para la unión?",
+    "opciones": {
+      "A": "Porque el ligando pierde grados de libertad conformacionales al adoptar una única conformación en el sitio de unión",
+      "B": "Porque el ligando gana entropía traslacional al quedar confinado en el sitio",
+      "C": "Porque la proteína se vuelve más rígida al unir el ligando",
+      "D": "Porque el efecto hidrofóbico se reduce al unirse el ligando"
+    },
+    "correcta": "A",
+    "explicacion": "En solución, el ligando explora libremente múltiples conformaciones (rotación de enlaces, etc.). Al unirse a la proteína, queda 'congelado' en una única conformación activa, perdiendo entropía conformacional. Esta pérdida entrópica (ΔS < 0, término -TΔS > 0) es desfavorable para ΔG de unión y debe ser compensada por interacciones entálpicas favorables."
+  },
+  {
+    "id": "M7_034",
+    "tema": "UA3 - Energía libre de unión",
+    "dificultad": "medio",
+    "pregunta": "¿Cuál es la unidad típica en la que se expresa la energía libre de unión (ΔG) en modelado molecular?",
+    "opciones": {
+      "A": "Joules/mol",
+      "B": "kcal/mol",
+      "C": "eV",
+      "D": "kJ/átomo"
+    },
+    "correcta": "B",
+    "explicacion": "En modelado molecular y bioquímica, la energía libre de unión se expresa habitualmente en kcal/mol (kilocaloría por mol). Las energías de interacción biológica suelen estar en el rango de -5 a -15 kcal/mol para inhibidores de alta afinidad nanomolar."
+  },
+  {
+    "id": "M7_035",
+    "tema": "UA3 - Energía libre de unión",
+    "dificultad": "medio",
+    "pregunta": "¿Qué método experimental mide directamente las componentes entálpica y entrópica de la energía libre de unión?",
+    "opciones": {
+      "A": "Cristalografía de rayos X",
+      "B": "Calorimetría de titulación isotérmica (ITC)",
+      "C": "Resonancia magnética nuclear (RMN)",
+      "D": "Espectrometría de masas nativa"
+    },
+    "correcta": "B",
+    "explicacion": "La calorimetría de titulación isotérmica (ITC) mide directamente el calor liberado o absorbido durante la unión de un ligando a su receptor, proporcionando simultáneamente ΔH, ΔG (a través de la Kd) y por diferencia ΔS. Es la técnica gold standard para la caracterización termodinámica de interacciones biomoleculares."
+  },
+  {
+    "id": "M7_036",
+    "tema": "UA3 - Energía libre de unión",
+    "dificultad": "facil",
+    "pregunta": "Un fármaco tiene una Kd = 1 nM. ¿Cómo se clasifica esta afinidad?",
+    "opciones": {
+      "A": "Baja afinidad",
+      "B": "Afinidad moderada",
+      "C": "Alta afinidad",
+      "D": "La Kd no está relacionada con la afinidad"
+    },
+    "correcta": "C",
+    "explicacion": "Una constante de disociación Kd = 1 nM indica alta afinidad. La Kd es inversamente proporcional a la afinidad: cuanto menor es la Kd, mayor es la afinidad. Fármacos con Kd nanomolar son excelentes candidatos terapéuticos. La mayoría de los fármacos aprobados tienen Ki o Kd en el rango nM-µM."
+  },
+  {
+    "id": "M7_037",
+    "tema": "UA4 - Reconocimiento del ligando: interacciones no enlazadas",
+    "dificultad": "facil",
+    "pregunta": "¿Cuál es el modelo clásico de reconocimiento ligando-receptor que supone que ambas moléculas son rígidas y complementarias?",
+    "opciones": {
+      "A": "Modelo de ajuste inducido (induced fit)",
+      "B": "Modelo llave-cerradura (lock and key)",
+      "C": "Modelo de selección conformacional",
+      "D": "Modelo alostérico"
+    },
+    "correcta": "B",
+    "explicacion": "El modelo llave-cerradura (propuesto por Emil Fischer en 1894) supone que el ligando (llave) encaja perfectamente en el sitio activo del receptor (cerradura) sin cambios conformacionales en ninguno de los dos. El modelo más moderno de 'ajuste inducido' reconoce que ambas moléculas pueden cambiar de conformación al unirse."
+  },
+  {
+    "id": "M7_038",
+    "tema": "UA4 - Reconocimiento del ligando: interacciones no enlazadas",
+    "dificultad": "facil",
+    "pregunta": "¿Qué tipo de interacción no covalente tiene mayor rango de acción y decae más lentamente con la distancia?",
+    "opciones": {
+      "A": "Interacciones de van der Waals (dispersión)",
+      "B": "Interacciones ión-ión (electrostáticas entre cargas formales)",
+      "C": "Interacciones de dispersión de London",
+      "D": "Interacciones hidrofóbicas"
+    },
+    "correcta": "B",
+    "explicacion": "Las interacciones ión-ión (electrostáticas entre dos cargas formales) decaen con 1/r, es decir, tienen el mayor rango de acción de todas las interacciones no covalentes. Las interacciones van der Waals (dispersión) decaen con 1/r⁶ y la repulsión de Pauli con 1/r¹²."
+  },
+  {
+    "id": "M7_039",
+    "tema": "UA4 - Reconocimiento del ligando: interacciones no enlazadas",
+    "dificultad": "medio",
+    "pregunta": "¿Cuál es la dependencia con la distancia del potencial de Lennard-Jones que describe las interacciones de van der Waals?",
+    "opciones": {
+      "A": "Atracción ∝ 1/r⁶ y repulsión ∝ 1/r¹²",
+      "B": "Atracción ∝ 1/r² y repulsión ∝ 1/r⁶",
+      "C": "Atracción ∝ 1/r y repulsión ∝ 1/r³",
+      "D": "Atracción ∝ 1/r³ y repulsión ∝ 1/r⁹"
+    },
+    "correcta": "A",
+    "explicacion": "El potencial de Lennard-Jones (12-6) describe las interacciones van der Waals: V(r) = A/r¹² - B/r⁶. El término atractivo (dispersión de London) decae con 1/r⁶ y el término repulsivo (repulsión de Pauli por solapamiento de nubes electrónicas) decae con 1/r¹²."
+  },
+  {
+    "id": "M7_040",
+    "tema": "UA4 - Reconocimiento del ligando: interacciones no enlazadas",
+    "dificultad": "medio",
+    "pregunta": "¿Qué es el radio de van der Waals de un átomo?",
+    "opciones": {
+      "A": "El radio del núcleo atómico",
+      "B": "La distancia de equilibrio en un enlace covalente",
+      "C": "El radio efectivo de la nube electrónica de un átomo no enlazado que determina el espacio que ocupa",
+      "D": "La mitad de la distancia de enlace covalente"
+    },
+    "correcta": "C",
+    "explicacion": "El radio de van der Waals es el radio efectivo de la nube electrónica de un átomo cuando no está enlazado covalentemente. Determina el espacio que ocupa el átomo y el mínimo de aproximación con otros átomos (contacto de van der Waals = suma de radios vdW). Para carbono es ~1.7 Å, para nitrógeno ~1.55 Å, para oxígeno ~1.52 Å."
+  },
+  {
+    "id": "M7_041",
+    "tema": "UA4 - Reconocimiento del ligando: interacciones no enlazadas",
+    "dificultad": "facil",
+    "pregunta": "En las proteínas, ¿cuál es el único enlace covalente que une aminoácidos consecutivos en la cadena principal?",
+    "opciones": {
+      "A": "El enlace disulfuro (S-S)",
+      "B": "El enlace peptídico (C-N)",
+      "C": "El enlace fosfodiéster",
+      "D": "El enlace éster"
+    },
+    "correcta": "B",
+    "explicacion": "En la cadena principal de las proteínas, los aminoácidos están conectados mediante enlaces peptídicos (C(O)-NH), que son los únicos enlaces covalentes que unen residuos consecutivos en el esqueleto. Tienen carácter parcialmente doble por resonancia, lo que les confiere planaridad."
+  },
+  {
+    "id": "M7_042",
+    "tema": "UA4 - Reconocimiento del ligando: interacciones no enlazadas",
+    "dificultad": "dificil",
+    "pregunta": "¿Por qué el efecto hidrofóbico puede considerarse principalmente un fenómeno entrópico?",
+    "opciones": {
+      "A": "Porque las moléculas apolares liberan calor al aggregarse",
+      "B": "Porque la agregación de grupos hidrofóbicos libera moléculas de agua de la capa de solvatación ordenada, aumentando la entropía del sistema",
+      "C": "Porque los grupos hidrofóbicos forman puentes de hidrógeno entre sí",
+      "D": "Porque la energía potencial electrostática entre grupos apolares es negativa"
+    },
+    "correcta": "B",
+    "explicacion": "El efecto hidrofóbico tiene un origen principalmente entrópico: las moléculas de agua forman redes de puentes de hidrógeno muy ordenadas alrededor de solutos no polares (reduciendo la entropía del agua). Cuando los grupos hidrofóbicos se agregan, se liberan estas moléculas de agua ordenadas, aumentando la entropía total del sistema y siendo esta la fuerza impulsora de la agregación."
+  },
+  {
+    "id": "M7_043",
+    "tema": "UA4 - Reconocimiento del ligando: interacciones no enlazadas",
+    "dificultad": "dificil",
+    "pregunta": "¿Cuál de las siguientes interacciones no covalentes tiene mayor energía de interacción típica?",
+    "opciones": {
+      "A": "Dispersión de London entre dos átomos de carbono",
+      "B": "Puente de hidrógeno N-H···O",
+      "C": "Interacción ión-ión entre cargas opuestas a distancia de contacto",
+      "D": "Interacción hidrofóbica entre dos cadenas de fenilalanina"
+    },
+    "correcta": "C",
+    "explicacion": "Las interacciones ión-ión (sal bridges) entre cargas formales opuestas tienen las mayores energías de interacción entre las interacciones no covalentes: típicamente 40-80 kcal/mol en fase gaseosa (aunque atenuadas en agua por la constante dieléctrica). Los puentes de hidrógeno son ~1-10 kcal/mol y las dispersiones de London < 1 kcal/mol por par de átomos."
+  },
+  {
+    "id": "M7_044",
+    "tema": "UA4 - Reconocimiento del ligando: interacciones no enlazadas",
+    "dificultad": "medio",
+    "pregunta": "¿Cómo decae con la distancia la interacción entre un ión y un dipolo permanente?",
+    "opciones": {
+      "A": "Como 1/r",
+      "B": "Como 1/r²",
+      "C": "Como 1/r³",
+      "D": "Como 1/r⁶"
+    },
+    "correcta": "B",
+    "explicacion": "Las interacciones ion-dipolo decaen con 1/r², las dipolo-dipolo con 1/r³, y las dispersión de London (dipolo instantáneo - dipolo inducido) con 1/r⁶. La repulsión de Pauli decae con 1/r¹². Las ión-ión decaen con 1/r."
+  },
+  {
+    "id": "M7_045",
+    "tema": "UA4 - Reconocimiento del ligando: interacciones no enlazadas",
+    "dificultad": "medio",
+    "pregunta": "¿Cuál de las siguientes interacciones NO se incluye en el término de interacciones 'no enlazadas' de un campo de fuerzas?",
+    "opciones": {
+      "A": "Interacciones electrostáticas (Coulomb)",
+      "B": "Van der Waals (Lennard-Jones)",
+      "C": "Tensión de ángulos de enlace",
+      "D": "Puentes de hidrógeno (generalmente incluidos implícitamente en electrostática)"
+    },
+    "correcta": "C",
+    "explicacion": "La tensión de ángulos de enlace forma parte de los términos 'enlazados' del campo de fuerzas (junto con tensión de enlace y torsiones diedrales). Los términos 'no enlazados' son: electrostáticos (Coulomb), van der Waals (Lennard-Jones) y eventualmente puentes de hidrógeno explícitos."
+  },
+  {
+    "id": "M7_046",
+    "tema": "UA4 - Reconocimiento del ligando: interacciones no enlazadas",
+    "dificultad": "facil",
+    "pregunta": "¿Qué modelo de reconocimiento molecular propone que tanto el ligando como el receptor cambian de conformación al unirse?",
+    "opciones": {
+      "A": "Modelo llave-cerradura",
+      "B": "Modelo de ajuste inducido (induced fit)",
+      "C": "Modelo de acoplamiento rígido",
+      "D": "Modelo de dos estados"
+    },
+    "correcta": "B",
+    "explicacion": "El modelo de ajuste inducido (propuesto por Daniel Koshland en 1958) reconoce que el sitio activo del receptor no tiene necesariamente la forma complementaria al ligando en ausencia de este. La unión del ligando induce cambios conformacionales en el receptor (y posiblemente en el ligando) que optimizan la complementariedad de la unión."
+  },
+  {
+    "id": "M7_047",
+    "tema": "UA5 - Movimientos macromoleculares",
+    "dificultad": "facil",
+    "pregunta": "¿Cuál es la escala de tiempo típica de las fluctuaciones atómicas locales (movimientos de mayor frecuencia) en proteínas?",
+    "opciones": {
+      "A": "Milisegundos a segundos",
+      "B": "Microsegundos a milisegundos",
+      "C": "Femtosegundos a picosegundos",
+      "D": "Nanosegundos a microsegundos"
+    },
+    "correcta": "C",
+    "explicacion": "Las fluctuaciones atómicas locales (vibraciones de enlace, libraciones de grupos) ocurren en la escala de femtosegundos (10⁻¹⁵ s) a picosegundos (10⁻¹²s). Los movimientos colectivos de hélices y dominios ocurren en nanosegundos-microsegundos. Los cambios conformacionales grandes (plegamiento) ocurren en microsegundos a segundos."
+  },
+  {
+    "id": "M7_048",
+    "tema": "UA5 - Movimientos macromoleculares",
+    "dificultad": "facil",
+    "pregunta": "¿Qué son los 'movimientos de solapa' (flap movements) en proteínas como la proteasa del VIH-1?",
+    "opciones": {
+      "A": "Vibraciones de alta frecuencia de átomos individuales",
+      "B": "Grandes movimientos colectivos de lóbulos o lazos que abren y cierran el sitio de unión del ligando",
+      "C": "Cambios en la estructura secundaria de alpha-hélices",
+      "D": "Oscilaciones de la cadena lateral de residuos aromáticos"
+    },
+    "correcta": "B",
+    "explicacion": "Los movimientos de solapa (flap movements) son grandes movimientos colectivos de lazos o dominios completos que abren y cierran el sitio de unión. En la proteasa del VIH-1, dos solapas (flaps) simétricas deben abrirse para permitir la entrada del sustrato/inhibidor y cerrarse para la catálisis. Son esenciales para la función enzimática."
+  },
+  {
+    "id": "M7_049",
+    "tema": "UA5 - Movimientos macromoleculares",
+    "dificultad": "medio",
+    "pregunta": "¿Cómo reduce una enzima la energía de activación de una reacción química?",
+    "opciones": {
+      "A": "Cambiando la termodinámica de la reacción (ΔG total)",
+      "B": "Estabilizando el estado de transición mediante interacciones específicas con el sitio activo",
+      "C": "Proporcionando energía térmica adicional a los sustratos",
+      "D": "Aumentando la concentración de reactivos en el medio"
+    },
+    "correcta": "B",
+    "explicacion": "Las enzimas reducen la barrera de energía de activación (Ea) estabilizando preferentemente el estado de transición mediante interacciones complementarias específicas (puentes de H, contactos iónicos, etc.). La barrera disminuye sin cambiar el ΔG de la reacción global (que solo depende de los estados inicial y final)."
+  },
+  {
+    "id": "M7_050",
+    "tema": "UA5 - Movimientos macromoleculares",
+    "dificultad": "medio",
+    "pregunta": "¿Qué tipo de movimiento macromolecular describe la apertura y cierre de dominios completos de una proteína en escalas de tiempo de microsegundos?",
+    "opciones": {
+      "A": "Fluctuaciones atómicas locales",
+      "B": "Vibraciones de grupos químicos",
+      "C": "Cambios conformacionales o movimientos colectivos de dominios",
+      "D": "Difusión traslacional de la proteína completa"
+    },
+    "correcta": "C",
+    "explicacion": "Los cambios conformacionales a gran escala (como la apertura/cierre de dominios, movimientos tipo bisagra) ocurren en escalas de tiempo de microsegundos a milisegundos. Son distintos de las fluctuaciones atómicas rápidas (fs-ps) y de los movimientos conformacionales locales de cadenas laterales (ns)."
+  },
+  {
+    "id": "M7_051",
+    "tema": "UA5 - Movimientos macromoleculares",
+    "dificultad": "dificil",
+    "pregunta": "¿Por qué es importante la flexibilidad proteica para el diseño de fármacos?",
+    "opciones": {
+      "A": "Porque las proteínas rígidas son imposibles de inhibir",
+      "B": "Porque el sitio de unión puede tener conformaciones diferentes en presencia y ausencia del ligando, y el diseño debe considerar esta plasticidad",
+      "C": "Porque la flexibilidad impide la formación de cristales para cristalografía",
+      "D": "Porque los métodos de docking rígido son siempre suficientes para predecir la pose correcta"
+    },
+    "correcta": "B",
+    "explicacion": "La flexibilidad proteica es crucial en diseño de fármacos porque el sitio de unión puede adoptar conformaciones diferentes (apo vs. holo), y el uso de una única estructura cristalográfica puede perder bolsillos crípticos o subestimar la adaptabilidad del receptor. Los métodos de docking flexible o las simulaciones de MD son necesarios para capturar esta plasticidad."
+  },
+  {
+    "id": "M7_052",
+    "tema": "UA5 - Movimientos macromoleculares",
+    "dificultad": "dificil",
+    "pregunta": "¿Cuál de los siguientes métodos computacionales permite explorar explícitamente los movimientos macromoleculares en función del tiempo?",
+    "opciones": {
+      "A": "Minimización de energía por gradiente conjugado",
+      "B": "Docking molecular rígido",
+      "C": "Dinámica molecular (MD)",
+      "D": "Análisis de componentes principales (PCA) de estructuras estáticas"
+    },
+    "correcta": "C",
+    "explicacion": "La dinámica molecular (MD) integra las ecuaciones de Newton para todos los átomos del sistema a lo largo del tiempo, permitiendo observar explícitamente los movimientos atómicos, fluctuaciones, cambios conformacionales y eventos de unión/disociación en función del tiempo. Es la herramienta principal para estudiar la dinámica de proteínas."
+  },
+  {
+    "id": "M7_053",
+    "tema": "UA5 - Movimientos macromoleculares",
+    "dificultad": "medio",
+    "pregunta": "¿Qué parámetro termodinámico está directamente relacionado con la barrera de energía de activación de una reacción enzimática?",
+    "opciones": {
+      "A": "ΔG de la reacción global",
+      "B": "Energía de activación (Ea) o ΔG‡ del estado de transición",
+      "C": "Entalpía de formación del sustrato",
+      "D": "Entropía de solvatación del producto"
+    },
+    "correcta": "B",
+    "explicacion": "La velocidad de una reacción enzimática está determinada por la energía de activación (Ea) o energía libre de Gibbs del estado de transición (ΔG‡), según la ecuación de Arrhenius (k = A·exp(-Ea/RT)). La enzima reduce ΔG‡ sin afectar al ΔG global de la reacción."
+  },
+  {
+    "id": "M7_054",
+    "tema": "UA5 - Movimientos macromoleculares",
+    "dificultad": "facil",
+    "pregunta": "¿Cuántos tipos principales de movimientos proteicos se distinguen en función de su escala temporal y amplitud?",
+    "opciones": {
+      "A": "Dos: lentos y rápidos",
+      "B": "Tres: fluctuaciones atómicas, movimientos colectivos y cambios conformacionales",
+      "C": "Cuatro: vibraciones, rotaciones, translaciones y plegamientos",
+      "D": "Solo uno: todos los movimientos son equivalentes"
+    },
+    "correcta": "B",
+    "explicacion": "Los movimientos proteicos se clasifican en tres categorías principales según su escala temporal y amplitud: (1) fluctuaciones atómicas locales (fs-ps, pequeña amplitud), (2) movimientos colectivos de hélices y dominios (ns-µs, amplitud media), y (3) cambios conformacionales grandes como plegamiento/desplegamiento (µs-s, gran amplitud)."
+  },
+  {
+    "id": "M7_055",
+    "tema": "UA5 - Movimientos macromoleculares",
+    "dificultad": "dificil",
+    "pregunta": "¿Cuál es la primera película de dinámica molecular de una proteína, y quién la realizó?",
+    "opciones": {
+      "A": "McCammon y Karplus, dinámica del BPTI en 1977",
+      "B": "Michael Levitt en 1979, usando el computador WEIZAC-Golem",
+      "C": "Warshel y Levitt en 1976, simulando la lisozima",
+      "D": "Perutz y Kendrew en 1960, usando difracción de rayos X"
+    },
+    "correcta": "B",
+    "explicacion": "La primera película de dinámica molecular de una proteína fue realizada por Michael Levitt en 1979 usando el computador WEIZAC-Golem del Instituto Weizmann. Simuló la dinámica de una proteína pequeña incluyendo todos los átomos de hidrógeno para mantener la estructura cerca de la estructura cristalográfica nativa."
+  },
+  {
+    "id": "M7_056",
+    "tema": "UA5 - Movimientos macromoleculares",
+    "dificultad": "medio",
+    "pregunta": "¿Qué significa que la proteasa del VIH-1 tenga una estructura 'semi-abierta' en ausencia de ligando?",
+    "opciones": {
+      "A": "Que la proteasa está desnaturalizada parcialmente",
+      "B": "Que las solapas (flaps) están en una posición intermedia entre completamente abiertas y completamente cerradas, permitiendo el acceso al sitio activo",
+      "C": "Que la proteasa tiene solo una de sus dos subunidades activas",
+      "D": "Que el sitio catalítico está bloqueado por un inhibidor"
+    },
+    "correcta": "B",
+    "explicacion": "La proteasa del VIH-1 es un homodímero con dos solapas (flaps) que regulan el acceso al sitio activo. En ausencia de sustrato o inhibidor, las solapas se encuentran en una conformación semi-abierta, fluctuando dinámicamente. Al unirse el sustrato/inhibidor, las solapas se cierran adoptando la conformación 'closed' que permite la catálisis."
+  },
+  {
+    "id": "M7_057",
+    "tema": "UA6 - Mecánica clásica molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Qué concepto matemático se usa para encontrar la dirección de máximo descenso de energía en un paisaje energético?",
+    "opciones": {
+      "A": "El laplaciano",
+      "B": "El gradiente de energía (∇E)",
+      "C": "La función de onda",
+      "D": "La matriz hessiana"
+    },
+    "correcta": "B",
+    "explicacion": "El gradiente de energía (∇E) es un vector que apunta en la dirección de máximo aumento de energía. En minimización de energía, se mueve en la dirección opuesta al gradiente (descenso de gradiente) para encontrar el mínimo energético más cercano."
+  },
+  {
+    "id": "M7_058",
+    "tema": "UA6 - Mecánica clásica molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Cuál es la diferencia fundamental entre los algoritmos de 'máximo descenso' (steepest descent) y 'gradientes conjugados' en minimización de energía?",
+    "opciones": {
+      "A": "El máximo descenso converge más rápido que los gradientes conjugados",
+      "B": "El máximo descenso solo sigue el gradiente actual, mientras que los gradientes conjugados incorporan información del gradiente anterior para una convergencia más eficiente",
+      "C": "Los gradientes conjugados no requieren calcular el gradiente de energía",
+      "D": "El máximo descenso encuentra el mínimo global mientras que los gradientes conjugados solo encuentran mínimos locales"
+    },
+    "correcta": "B",
+    "explicacion": "El algoritmo de máximo descenso (steepest descent) solo usa la dirección del gradiente actual, lo que puede resultar en oscilaciones en valles estrechos. Los gradientes conjugados incorporan información del gradiente anterior (dirección conjugada), logrando convergencia más eficiente, especialmente cerca del mínimo."
+  },
+  {
+    "id": "M7_059",
+    "tema": "UA6 - Mecánica clásica molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Cuántos pasos tiene el protocolo típico de minimización de energía en preparación de sistemas moleculares para MD?",
+    "opciones": {
+      "A": "Uno solo: minimización global",
+      "B": "Dos: minimización de agua y minimización total",
+      "C": "Cuatro etapas con restricciones progresivamente menores",
+      "D": "Diez pasos de equilibración"
+    },
+    "correcta": "C",
+    "explicacion": "El protocolo estándar de minimización consta de 4 etapas con restricciones posicionales progresivamente menores: (1) minimizar solo el solvente con proteína+ligando fijos, (2) minimizar cadenas laterales con el esqueleto restringido, (3) minimizar todo el sistema con restricciones suaves, (4) minimización completa sin restricciones."
+  },
+  {
+    "id": "M7_060",
+    "tema": "UA6 - Mecánica clásica molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Por qué la minimización de energía no puede garantizar encontrar el mínimo global de energía potencial?",
+    "opciones": {
+      "A": "Porque los algoritmos de minimización son inherentemente estocásticos y aleatorios",
+      "B": "Porque los algoritmos de descenso de gradiente solo pueden descender hacia el mínimo local más cercano a la estructura de partida",
+      "C": "Porque la superficie de energía potencial no tiene mínimos definidos",
+      "D": "Porque la minimización solo funciona en sistemas pequeños"
+    },
+    "correcta": "B",
+    "explicacion": "Los algoritmos de minimización basados en el gradiente son métodos locales: solo pueden 'bajar cuesta abajo' y convergen al mínimo local más cercano a la estructura inicial, sin poder saltar barreras energéticas para explorar otros mínimos. El mínimo global requiere técnicas especiales como recocido simulado o réplicas de intercambio."
+  },
+  {
+    "id": "M7_061",
+    "tema": "UA6 - Mecánica clásica molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Qué información proporciona la segunda derivada de la energía (matriz Hessiana) en el análisis de una superficie de energía potencial?",
+    "opciones": {
+      "A": "La dirección del máximo descenso de energía",
+      "B": "Las frecuencias de vibración y la naturaleza del punto estacionario (mínimo vs. punto de silla)",
+      "C": "La energía total del sistema",
+      "D": "Las cargas parciales atómicas"
+    },
+    "correcta": "B",
+    "explicacion": "La matriz Hessiana (segundas derivadas de la energía respecto a coordenadas) proporciona las frecuencias de vibración del sistema (autovalores de la Hessiana). Si todos los autovalores son positivos, el punto es un mínimo verdadero. Si hay un autovalor negativo (frecuencia imaginaria), el punto es un punto de silla (estado de transición)."
+  },
+  {
+    "id": "M7_062",
+    "tema": "UA6 - Mecánica clásica molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Qué es un 'campo de fuerzas' (force field) en mecánica molecular?",
+    "opciones": {
+      "A": "Un campo electromagnético que rodea la molécula",
+      "B": "Un conjunto de funciones matemáticas y parámetros que describen la energía potencial de un sistema molecular en función de las coordenadas atómicas",
+      "C": "Una representación gráfica de las fuerzas intermoleculares",
+      "D": "El conjunto de fuerzas de van der Waals exclusivamente"
+    },
+    "correcta": "B",
+    "explicacion": "Un campo de fuerzas (force field) es un conjunto de funciones analíticas y sus parámetros asociados (constantes de enlace, ángulos de equilibrio, cargas parciales, radios vdW, etc.) que permiten calcular la energía potencial de un sistema molecular para cualquier configuración atómica. Ejemplos: AMBER, CHARMM, GROMOS, OPLS."
+  },
+  {
+    "id": "M7_063",
+    "tema": "UA6 - Mecánica clásica molecular",
+    "dificultad": "facil",
+    "pregunta": "¿En qué consiste el 'paisaje de energía potencial' (energy landscape) de una proteína?",
+    "opciones": {
+      "A": "La representación de la energía cinética de los átomos en función del tiempo",
+      "B": "La hipersuperficie multidimensional que describe la energía potencial de la proteína como función de todas las coordenadas atómicas",
+      "C": "El mapa de potencial electrostático en la superficie de la proteína",
+      "D": "La curva de energía de plegamiento en función de la temperatura"
+    },
+    "correcta": "B",
+    "explicacion": "El paisaje de energía potencial es la hipersuperficie 3N-dimensional (donde N es el número de átomos) que describe cómo varía la energía potencial con cada posible configuración atómica. Tiene múltiples mínimos locales (confórmeros), puntos de silla (estados de transición) y un mínimo global. La proteína nativa corresponde a la región de mínimos más estables."
+  },
+  {
+    "id": "M7_064",
+    "tema": "UA6 - Mecánica clásica molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué término del campo de fuerzas describe la resistencia de los enlaces covalentes a la deformación de su longitud de equilibrio?",
+    "opciones": {
+      "A": "Término de diedros (torsiones)",
+      "B": "Término de ángulos de enlace",
+      "C": "Término de enlace (potencial armónico de estiramiento de enlace)",
+      "D": "Término de van der Waals"
+    },
+    "correcta": "C",
+    "explicacion": "El término de enlace del campo de fuerzas modela la energía de deformación de la longitud de enlace usando un potencial armónico: E_enlace = k(r - r₀)², donde k es la constante de fuerza, r la longitud actual y r₀ la longitud de equilibrio. Describe la 'rigidez' del enlace covalente ante estiramiento o compresión."
+  },
+  {
+    "id": "M7_065",
+    "tema": "UA6 - Mecánica clásica molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Por qué es necesario equilibrar el sistema antes de la producción de trayectorias de dinámica molecular?",
+    "opciones": {
+      "A": "Porque durante la equilibración se calculan las cargas parciales atómicas",
+      "B": "Porque la estructura inicial (cristalográfica o modelada) puede tener tensiones que generarían fuerzas artificiales extremas al inicio de la MD, distorsionando los resultados",
+      "C": "Porque la equilibración permite encontrar el mínimo global de energía",
+      "D": "Porque es obligatorio por el protocolo del PDB"
+    },
+    "correcta": "B",
+    "explicacion": "Las estructuras cristalográficas pueden tener solapamientos atómicos, ángulos y distancias de enlace fuera del equilibrio, o posiciones de moléculas de agua no optimizadas. Sin equilibración previa, las fuerzas derivadas de estas tensiones serían enormes y generarían inestabilidades numéricas en la integración de las ecuaciones de movimiento."
+  },
+  {
+    "id": "M7_066",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Quién determinó la estructura de la penicilina por cristalografía de rayos X en 1946 y recibió el Nobel en 1964?",
+    "opciones": {
+      "A": "Linus Pauling",
+      "B": "Rosalind Franklin",
+      "C": "Dorothy Hodgkin",
+      "D": "Max Perutz"
+    },
+    "correcta": "C",
+    "explicacion": "Dorothy Hodgkin determinó la estructura de la penicilina por cristalografía de rayos X en 1946 y la de la insulina en 1969. Recibió el Premio Nobel de Química en 1964 por sus determinaciones de estructuras de sustancias bioquímicas por cristalografía de rayos X."
+  },
+  {
+    "id": "M7_067",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Qué proteínas determinaron Perutz y Kendrew por cristalografía de rayos X, recibiendo el Nobel de Química en 1962?",
+    "opciones": {
+      "A": "Perutz la hemoglobina y Kendrew la mioglobina",
+      "B": "Perutz la insulina y Kendrew la lisozima",
+      "C": "Perutz la tripsina y Kendrew la quimotripsina",
+      "D": "Ambos determinaron la estructura del DNA"
+    },
+    "correcta": "A",
+    "explicacion": "Max Perutz determinó la estructura tridimensional de la hemoglobina y John C. Kendrew la de la mioglobina (primera proteína resuelta a resolución atómica), compartiendo el Premio Nobel de Química en 1962. El modelo físico de mioglobina de Kendrew se conocía como el 'bosque de varillas'."
+  },
+  {
+    "id": "M7_068",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué premio Nobel de Química de 2017 reconoció el desarrollo de la crioelectromicroscopía (crioEM)?",
+    "opciones": {
+      "A": "Dubochet, Frank y Henderson",
+      "B": "Karplus, Levitt y Warshel",
+      "C": "Kohn y Pople",
+      "D": "Ramakrishnan, Steitz y Yonath"
+    },
+    "correcta": "A",
+    "explicacion": "Jacques Dubochet, Joachim Frank y Richard Henderson recibieron el Premio Nobel de Química en 2017 'por el desarrollo de la crioelectromicroscopía para la determinación de estructuras de biomoléculas en solución con alta resolución'. La crioEM ha revolucionado la biología estructural por no requerir cristalización."
+  },
+  {
+    "id": "M7_069",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Cuál es el principal visualizador molecular de código abierto actualmente más utilizado en bioinformática estructural?",
+    "opciones": {
+      "A": "RasMol",
+      "B": "MOLSCRIPT",
+      "C": "PyMOL",
+      "D": "ORTEP"
+    },
+    "correcta": "C",
+    "explicacion": "PyMOL es el visualizador molecular más ampliamente usado en bioinformática estructural actual. Aunque originalmente fue de código abierto (desarrollado por Warren DeLano), actualmente es mantenido y distribuido por Schrödinger. Permite visualizar moléculas en múltiples representaciones, analizar interacciones y generar imágenes de publicación."
+  },
+  {
+    "id": "M7_070",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué representa la 'superficie accesible al solvente' (SAS) de una proteína?",
+    "opciones": {
+      "A": "La superficie de van der Waals de todos los átomos",
+      "B": "El área barrida por el centro de una sonda esférica de radio 1.4 Å (molécula de agua) al rodar por la superficie del soluto",
+      "C": "La superficie interna de los canales y túneles de la proteína",
+      "D": "La suma de las áreas de todos los átomos individuales"
+    },
+    "correcta": "B",
+    "explicacion": "La superficie accesible al solvente (SAS, Solvent Accessible Surface) de Lee y Richards es el área barrida por el centro de una sonda esférica de radio 1.4 Å (radio del agua) al rodar por la superficie de van der Waals de la proteína. Las regiones enterradas en la proteína tienen SAS = 0. Es fundamental para calcular la solvatación y el efecto hidrofóbico."
+  },
+  {
+    "id": "M7_071",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué es el potencial electrostático molecular (MEP) y para qué se usa en modelado molecular?",
+    "opciones": {
+      "A": "Es la energía cinética de los electrones en la superficie molecular",
+      "B": "Es el potencial electrostático creado por la distribución de carga de la molécula en cada punto del espacio, útil para predecir regiones de interacción electrofílica y nucleofílica",
+      "C": "Es el campo magnético generado por los momentos de espín electrónicos",
+      "D": "Es la entalpía de solvatación calculada con el modelo Poisson-Boltzmann"
+    },
+    "correcta": "B",
+    "explicacion": "El potencial electrostático molecular (MEP) mapea el potencial electrostático generado por la distribución de carga de la molécula sobre su superficie de van der Waals o accesible. Las regiones negativas (rojas) son susceptibles de interaccionar con electrófilos; las positivas (azules) con nucleófilos. Es esencial para entender la complementariedad electrostática en unión ligando-receptor."
+  },
+  {
+    "id": "M7_072",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Cuál es el valor aproximado del potencial térmico (kBT/e) a temperatura fisiológica (298 K)?",
+    "opciones": {
+      "A": "0.26 J/C = 260 mV",
+      "B": "0.026 J/C = 26 mV",
+      "C": "2.6 J/C = 2600 mV",
+      "D": "0.0026 J/C = 2.6 mV"
+    },
+    "correcta": "B",
+    "explicacion": "kBT/e = (1.38×10⁻²³ J/K × 298 K) / (1.602×10⁻¹⁹ C) ≈ 0.026 J/C = 26 mV. Este valor es importante en biofísica como unidad natural de energía térmica por unidad de carga, relevante para entender potenciales de membrana y energías de interacción electrostática a escala biológica."
+  },
+  {
+    "id": "M7_073",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Cuáles son las cuatro representaciones gráficas principales de moléculas disponibles en PyMOL?",
+    "opciones": {
+      "A": "CPK, lines, trace y cartoon",
+      "B": "Sticks, ribbon, mesh y surface",
+      "C": "Lines, sticks, spheres, surface, mesh, dots, ribbon y cartoon (son múltiples)",
+      "D": "Solo cartoon y surface"
+    },
+    "correcta": "C",
+    "explicacion": "PyMOL ofrece múltiples representaciones: lines (líneas), sticks (varillas), spheres (esferas), surface (superficie), mesh (malla), dots (puntos), ribbon (cinta) y cartoon (dibujo esquemático con hélices, láminas y lazos). Cada representación enfatiza aspectos diferentes de la estructura molecular."
+  },
+  {
+    "id": "M7_074",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Qué herramienta web fue desarrollada por el RCSB para visualización interactiva de estructuras del PDB en el navegador?",
+    "opciones": {
+      "A": "RasMol",
+      "B": "Mol* Viewer",
+      "C": "PyMOL web",
+      "D": "UCSF Chimera online"
+    },
+    "correcta": "B",
+    "explicacion": "Mol* (Molstar) Viewer es la herramienta web moderna desarrollada para visualización de estructuras moleculares grandes directamente en el navegador, sin necesidad de instalación. Está integrado en el RCSB PDB y el PDBe, y usa WebGL para renderizado 3D de alta calidad, incluyendo estructuras de gran tamaño como ribosomas o cápsides virales."
+  },
+  {
+    "id": "M7_075",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "medio",
+    "pregunta": "¿En qué año se descubrió la estructura del DNA de doble hélice y quiénes recibieron el Nobel por ello?",
+    "opciones": {
+      "A": "1953, Watson, Crick y Franklin",
+      "B": "1953, Watson, Crick y Wilkins (Nobel 1962)",
+      "C": "1962, Watson, Crick y Pauling",
+      "D": "1950, Franklin y Wilkins"
+    },
+    "correcta": "B",
+    "explicacion": "La estructura de doble hélice del DNA fue propuesta por Watson y Crick en 1953 (publicada en Nature), basándose crucialmente en los datos de difracción de rayos X de Rosalind Franklin y Maurice Wilkins. El Nobel de Fisiología o Medicina de 1962 fue para Watson, Crick y Wilkins. Rosalind Franklin había fallecido en 1958 y los Nobel no se conceden póstumamente."
+  },
+  {
+    "id": "M7_076",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Qué es el 'problema de las fases' en cristalografía de rayos X y cómo se soluciona?",
+    "opciones": {
+      "A": "El problema de cristalizar proteínas hidrofóbicas; se soluciona con detergentes",
+      "B": "La imposibilidad de medir directamente las fases de los factores de estructura; se resuelve mediante métodos como MIR, MAD o reemplazo molecular (MR)",
+      "C": "La dificultad de obtener cristales de buena calidad; se soluciona con optimización de condiciones de cristalización",
+      "D": "La corrección del movimiento térmico de los átomos; se resuelve con factores B"
+    },
+    "correcta": "B",
+    "explicacion": "En cristalografía de rayos X, el detector solo mide las amplitudes (|F|) de los factores de estructura, no sus fases (φ). Sin las fases no se puede calcular la densidad electrónica por transformada de Fourier inversa. El 'problema de las fases' se resuelve mediante: reemplazo isomorfo múltiple (MIR), dispersión anómala múltiple (MAD) o reemplazo molecular (MR) usando una estructura similar conocida."
+  },
+  {
+    "id": "M7_077",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Cuál de los siguientes programas de visualización molecular es una herramienta web de código abierto para análisis de grandes estructuras biomoleculares integrada en el PDB?",
+    "opciones": {
+      "A": "UCSF ChimeraX",
+      "B": "Jmol",
+      "C": "Mol* Viewer (Molstar)",
+      "D": "PyMOL"
+    },
+    "correcta": "C",
+    "explicacion": "Mol* (Molstar) es una herramienta de código abierto para visualización y análisis de grandes estructuras moleculares basada en web (JavaScript/WebGL). Es el visualizador integrado en el RCSB PDB y el PDBe, y es especialmente eficiente para estructuras de gran tamaño gracias al uso de archivos binarios comprimidos."
+  },
+  {
+    "id": "M7_078",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué representa el 'dipolo de hélice alfa' en las proteínas?",
+    "opciones": {
+      "A": "El momento dipolar del enlace peptídico individual",
+      "B": "Un dipolo macroscópico resultante de la alineación de los dipolos de los enlaces peptídicos a lo largo de la hélice, con carga parcial positiva en el N-terminal y negativa en el C-terminal",
+      "C": "La polaridad de la cadena lateral de los aminoácidos en la hélice",
+      "D": "El vector que apunta desde el centro de masa de la hélice hacia el ligando"
+    },
+    "correcta": "B",
+    "explicacion": "En una hélice alfa, los enlaces peptídicos están alineados con sus dipolos apuntando en la misma dirección (del C al N). La suma de estos dipolos individuales crea un dipolo macroscópico con carga parcial positiva (+δ) en el extremo N-terminal y negativa (-δ) en el C-terminal. Este dipolo de hélice puede tener efectos electrostáticos significativos en la unión de aniones y cationes."
+  },
+  {
+    "id": "M7_079",
+    "tema": "Docking molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Cuál es el objetivo principal del docking molecular en el contexto del diseño de fármacos?",
+    "opciones": {
+      "A": "Determinar la secuencia aminoacídica de una proteína diana",
+      "B": "Predecir la pose (posición y orientación) de unión de un ligando en el sitio activo de una proteína y estimar la energía de unión",
+      "C": "Simular la dinámica de plegamiento de una proteína",
+      "D": "Calcular el espectro de masas de un compuesto"
+    },
+    "correcta": "B",
+    "explicacion": "El docking molecular es una herramienta computacional que predice la pose (posición, orientación y conformación) de un ligando pequeño dentro del sitio de unión de una macromolécula receptora, y evalúa la calidad de esta pose mediante una función de puntuación (scoring). Es fundamental en el cribado virtual y el diseño racional de fármacos."
+  },
+  {
+    "id": "M7_080",
+    "tema": "Docking molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Cuáles son los dos componentes fundamentales de cualquier protocolo de docking?",
+    "opciones": {
+      "A": "Síntesis del ligando y medición de su IC50",
+      "B": "Muestreo conformacional y función de evaluación (scoring)",
+      "C": "Minimización de energía y dinámica molecular",
+      "D": "Cristalografía del complejo y RMN en solución"
+    },
+    "correcta": "B",
+    "explicacion": "Todo protocolo de docking tiene dos componentes esenciales: (1) el muestreo, que genera las posibles poses del ligando en el sitio de unión (sistemático, estocástico o determinista), y (2) la evaluación (scoring), que puntúa cada pose según criterios energéticos (campo de fuerzas MM, datos empíricos o potenciales de fuerza media) para identificar la pose más probable."
+  },
+  {
+    "id": "M7_081",
+    "tema": "Docking molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué es la 'malla de interacción' (grid) en el contexto del docking molecular?",
+    "opciones": {
+      "A": "Una red tridimensional de puntos que cubre el sitio de unión donde se precalculan las energías de interacción del receptor con un átomo sonda",
+      "B": "La cuadrícula de píxeles usada para visualizar la proteína en pantalla",
+      "C": "El conjunto de conformaciones del ligando generadas durante el muestreo",
+      "D": "La malla de cristal del cristal de proteína en cristalografía"
+    },
+    "correcta": "A",
+    "explicacion": "La malla de interacción (grid) es una red tridimensional de puntos que cubre el sitio de unión de la proteína. En cada punto de la malla se precalcula la energía de interacción del receptor con un átomo sonda de determinado tipo (van der Waals, electrostática). Durante el docking, la energía de cada pose del ligando se calcula por interpolación en la malla, acelerando enormemente los cálculos."
+  },
+  {
+    "id": "M7_082",
+    "tema": "Docking molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Cuántas evaluaciones de energía aproximadas son necesarias para una malla de 25 Å con espaciado 0.5 Å y resolución angular de 30°?",
+    "opciones": {
+      "A": "1.000 evaluaciones/confórmero",
+      "B": "172 × 10⁶ evaluaciones/confórmero",
+      "C": "1 × 10⁹ evaluaciones/confórmero",
+      "D": "10.000 evaluaciones/confórmero"
+    },
+    "correcta": "B",
+    "explicacion": "Para una malla de 25 Å con espaciado de 0.5 Å y resolución angular de 30°, el número de evaluaciones de energía requeridas es aproximadamente 172 × 10⁶ por confórmero del ligando. Esto subraya la necesidad de precalcular la malla de interacción para acelerar los cálculos de docking a un coste computacional razonable."
+  },
+  {
+    "id": "M7_083",
+    "tema": "Docking molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Cuál es el criterio numérico estándar para considerar que una pose de docking es 'buena' en la evaluación estructural?",
+    "opciones": {
+      "A": "RMSD ≤ 5.0 Å respecto a la estructura cristalográfica",
+      "B": "RMSD ≤ 2.0 Å respecto a la estructura cristalográfica del complejo",
+      "C": "Energía de unión calculada < -10 kcal/mol",
+      "D": "El ligando ocupa más del 80% del volumen del sitio de unión"
+    },
+    "correcta": "B",
+    "explicacion": "El criterio ampliamente aceptado para evaluar el éxito de una predicción de docking es que el RMSD (raíz cuadrática media de las desviaciones de posición atómica) entre la pose predicha y la estructura cristalográfica del complejo sea ≤ 2.0 Å. Un RMSD ≤ 2 Å indica que la pose predicha reproduce correctamente la geometría de unión observada experimentalmente."
+  },
+  {
+    "id": "M7_084",
+    "tema": "Docking molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Cuál fue el programa de docking más utilizado históricamente según las estadísticas de uso en publicaciones científicas?",
+    "opciones": {
+      "A": "GOLD",
+      "B": "FlexX",
+      "C": "AutoDock",
+      "D": "Glide"
+    },
+    "correcta": "C",
+    "explicacion": "AutoDock fue históricamente el programa de docking más utilizado (con ~27% de cuota de uso en publicaciones), principalmente por ser de acceso libre y gratuito. En evaluaciones más recientes, Glide (35%) lidera entre los programas comerciales, mientras que AutoDock (16%) y GOLD (12%) siguen siendo muy utilizados."
+  },
+  {
+    "id": "M7_085",
+    "tema": "Docking molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Qué programa de docking comercial desarrollado por Schrödinger tiene mayor cuota de uso actual?",
+    "opciones": {
+      "A": "AutoDock Vina",
+      "B": "Glide",
+      "C": "DOCK",
+      "D": "GOLD"
+    },
+    "correcta": "B",
+    "explicacion": "Glide (Schrödinger) es actualmente el programa de docking comercial más utilizado con aproximadamente el 35% de cuota de mercado. Destaca por su alta tasa de éxito en predicción de poses y su algoritmo de cribado jerárquico (HTVS, SP, XP) que permite cribar desde millones hasta cientos de compuestos con precisión creciente."
+  },
+  {
+    "id": "M7_086",
+    "tema": "Docking molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Cuál es la fórmula de la función de scoring energética usada en el docking (evaluación de poses)?",
+    "opciones": {
+      "A": "ΔGunión = ΣΣ [Aij/rij¹² - Bij/rij⁶ + 332 qiqj/(εrij)]",
+      "B": "E = ΣEenlaces + ΣEángulos + ΣEdiedros",
+      "C": "ΔG = ΔH - TΔS",
+      "D": "E = hν"
+    },
+    "correcta": "A",
+    "explicacion": "La función de scoring energética del docking evalúa las interacciones ligando-receptor mediante: ΔGunión = ΣΣ[Aij/rij¹² - Bij/rij⁶ + 332·qiqj/(ε·rij)], donde el primer término es la repulsión de Pauli, el segundo la atracción de dispersión (van der Waals) y el tercero la interacción electrostática de Coulomb entre todos los pares de átomos del ligando (i) y el receptor (j)."
+  },
+  {
+    "id": "M7_087",
+    "tema": "Docking molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Cuál es el RMSD del ejemplo de docking del JE-2147 en el sitio activo de la proteasa VIH-1 mostrado en las diapositivas, y cómo se interpreta?",
+    "opciones": {
+      "A": "RMSD = 0.5 Å, excelente predicción",
+      "B": "RMSD = 2.0 Å, predicción aceptable",
+      "C": "RMSD = 7.644 Å, predicción fallida (pose incorrecta)",
+      "D": "RMSD = 1.5 Å, buena predicción"
+    },
+    "correcta": "C",
+    "explicacion": "En el ejemplo mostrado de docking del JE-2147 en la proteasa VIH-1, el RMSD obtenido fue 7.644 Å, lo que indica que la pose predicha es muy diferente a la pose experimental (> 2 Å = criterio de fracaso). Aunque la energía calculada fue -3003 kcal/mol, la evaluación estructural revela que el docking no ha reproducido correctamente la geometría de unión observada cristalográficamente."
+  },
+  {
+    "id": "M7_088",
+    "tema": "Docking molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué tipos de mallas de interacción se utilizan en el docking basado en mallas (grid-based docking)?",
+    "opciones": {
+      "A": "Solo una malla universal para todas las interacciones",
+      "B": "Malla electrostática (φelec) y mallas de van der Waals para diferentes tipos de átomos (C, H, X)",
+      "C": "Mallas de distancia y mallas de ángulo de enlace",
+      "D": "Solo mallas de van der Waals"
+    },
+    "correcta": "B",
+    "explicacion": "El docking basado en mallas usa múltiples tipos de mallas: (1) malla electrostática (φelec) que recoge las interacciones de Coulomb, y (2) mallas de van der Waals para diferentes tipos de átomos del ligando (φvdW para carbonos C, hidrógenos H y heteroátomos X). Cada malla precalcula la energía de interacción de un átomo sonda de ese tipo en cada punto del grid."
+  },
+  {
+    "id": "M7_089",
+    "tema": "Docking molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Qué es SwissDock y en qué motor de docking está basado actualmente?",
+    "opciones": {
+      "A": "Un programa de docking local basado en GOLD",
+      "B": "Un servidor web de docking gratuito basado en AutoDock Vina y Attracting Cavities",
+      "C": "Una base de datos de resultados de docking precalculados",
+      "D": "Un plugin de PyMOL para docking rígido"
+    },
+    "correcta": "B",
+    "explicacion": "SwissDock es un servidor web gratuito de docking molecular que permite a los usuarios enviar ligandos y proteínas para realizar docking en la nube. La versión actual está basada en los motores AutoDock Vina y Attracting Cavities. El flujo de trabajo incluye: envío del ligando, envío del receptor, definición del espacio de búsqueda, selección de parámetros y lanzamiento del docking."
+  },
+  {
+    "id": "M7_090",
+    "tema": "Docking molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Cuáles son los tres métodos de muestreo conformacional usados en programas de docking?",
+    "opciones": {
+      "A": "Sistemático, estocástico y determinista",
+      "B": "Rígido, flexible y semi-flexible",
+      "C": "Monte Carlo, dinámica molecular y minimización",
+      "D": "Local, global y jerárquico"
+    },
+    "correcta": "A",
+    "explicacion": "Los programas de docking generan poses mediante tres tipos de muestreo: (1) sistemático: explora todas las combinaciones posibles de posición/orientación/conformación de forma exhaustiva; (2) estocástico: usa métodos aleatorios como Monte Carlo o algoritmos genéticos para explorar el espacio conformacional; (3) determinista: usa métodos de minimización o fragmentación determinista."
+  },
+  {
+    "id": "M7_091",
+    "tema": "Docking molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Por qué el docking flexible de receptor es más costoso computacionalmente que el docking rígido?",
+    "opciones": {
+      "A": "Porque requiere calcular la estructura cristalográfica del complejo",
+      "B": "Porque además del muestreo conformacional del ligando, hay que explorar los cambios conformacionales de las cadenas laterales (o incluso del esqueleto) del receptor, multiplicando exponencialmente el espacio de búsqueda",
+      "C": "Porque el docking flexible usa métodos cuánticos mientras el rígido usa mecánica molecular",
+      "D": "Porque el docking flexible requiere síntesis del ligando"
+    },
+    "correcta": "B",
+    "explicacion": "En el docking flexible de receptor, además de explorar las poses del ligando, hay que permitir el movimiento de las cadenas laterales (o incluso del esqueleto) del sitio de unión. Esto aumenta exponencialmente el número de grados de libertad a explorar, haciendo los cálculos mucho más costosos. Es especialmente importante cuando se sabe que el receptor experimenta cambios conformacionales significativos al unir distintos ligandos."
+  },
+  {
+    "id": "M7_092",
+    "tema": "Docking molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Cuál de las siguientes afirmaciones sobre las funciones de scoring de docking es CORRECTA?",
+    "opciones": {
+      "A": "Las funciones de scoring basadas en campo de fuerzas MM son siempre las más precisas",
+      "B": "Las funciones de scoring empíricas usan potenciales derivados estadísticamente de bases de datos de complejos cristalográficos",
+      "C": "Las funciones de scoring no pueden distinguir entre la pose correcta y poses incorrectas",
+      "D": "Las funciones de scoring calculan la entropía conformacional del ligando con alta precisión"
+    },
+    "correcta": "B",
+    "explicacion": "Las funciones de scoring empíricas (knowledge-based o potenciales de fuerza media) derivan los términos de energía de análisis estadístico de bases de datos de complejos proteína-ligando de alta resolución del PDB. Cada tipo de par de átomos (ligando-receptor) contribuye según su distribución de distancias observada, convirtiéndola en un potencial efectivo mediante la distribución de Boltzmann."
+  },
+  {
+    "id": "M7_093",
+    "tema": "Docking molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué es AutoDock Vina y en qué se diferencia de AutoDock 4?",
+    "opciones": {
+      "A": "AutoDock Vina usa un campo de fuerzas MM clásico, mientras que AutoDock 4 usa un scoring empírico",
+      "B": "AutoDock Vina es varios órdenes de magnitud más rápido que AutoDock 4 y usa una función de scoring híbrida empírica/conocimiento",
+      "C": "AutoDock Vina es una versión más antigua y menos precisa que AutoDock 4",
+      "D": "AutoDock Vina solo puede hacer docking rígido mientras que AutoDock 4 hace docking flexible"
+    },
+    "correcta": "B",
+    "explicacion": "AutoDock Vina (Trott & Olson, 2010) es una reimplementación de AutoDock que es varios órdenes de magnitud más rápida gracias a una mejor paralelización y a una función de scoring nueva (híbrida entre empírica y basada en conocimiento). Mantiene o mejora la precisión de AutoDock 4 con mucho menor tiempo de cálculo, haciéndolo ideal para cribados virtuales."
+  },
+  {
+    "id": "M7_094",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Cuántos núcleos de procesamiento tiene aproximadamente el supercomputador MareNostrum (España)?",
+    "opciones": {
+      "A": "Más de 50.000",
+      "B": "Más de 150.000",
+      "C": "Más de 1.000.000",
+      "D": "Más de 7.000.000"
+    },
+    "correcta": "B",
+    "explicacion": "El supercomputador MareNostrum, ubicado en el Barcelona Supercomputing Center (BSC), cuenta con más de 150.000 núcleos de procesamiento. Es el supercomputador más potente de España y uno de los más importantes de Europa para simulaciones de dinámica molecular y modelado de proteínas."
+  },
+  {
+    "id": "M7_095",
+    "tema": "UA3 - Energía libre de unión",
+    "dificultad": "dificil",
+    "pregunta": "En el cálculo de la energía libre de solvatación, ¿qué representa el término ΔGcav?",
+    "opciones": {
+      "A": "La energía de polarización del soluto por el solvente",
+      "B": "La energía necesaria para crear la cavidad en el solvente que acomoda al soluto, rompiendo interacciones solvente-solvente",
+      "C": "La energía de dispersión entre el soluto y las moléculas de solvente",
+      "D": "La energía de puentes de hidrógeno entre soluto y agua"
+    },
+    "correcta": "B",
+    "explicacion": "ΔGcav es la energía libre de cavitación: el trabajo necesario para crear una cavidad del tamaño del soluto en el solvente, contra las fuerzas cohesivas (tensión superficial) del solvente. Es un término desfavorable (positivo) ya que se deben romper interacciones solvente-solvente para alojar al soluto."
+  },
+  {
+    "id": "M7_096",
+    "tema": "UA4 - Reconocimiento del ligando: interacciones no enlazadas",
+    "dificultad": "dificil",
+    "pregunta": "¿Por qué las interacciones de stacking π-π entre anillos aromáticos son importantes en el reconocimiento molecular?",
+    "opciones": {
+      "A": "Porque forman enlaces covalentes π reversibles",
+      "B": "Porque las interacciones de dispersión (London) entre los sistemas π extendidos de los anillos aromáticos aportan energía de unión significativa y son geometrías frecuentes en complejos proteína-ligando",
+      "C": "Porque los anillos aromáticos crean puentes de hidrógeno entre sí",
+      "D": "Porque el stacking π-π es una interacción electrostática ión-dipolo"
+    },
+    "correcta": "B",
+    "explicacion": "Las interacciones de stacking π-π entre sistemas aromáticos (ya sea en disposición paralela o en T) son fundamentales en el reconocimiento molecular. Surgen de las fuerzas de dispersión de London entre las nubes electrónicas π y pueden contribuir entre 1-5 kcal/mol a la energía de unión. Son muy frecuentes en sitios de unión de fármacos con residuos de Phe, Tyr, Trp o His."
+  },
+  {
+    "id": "M7_097",
+    "tema": "UA5 - Movimientos macromoleculares",
+    "dificultad": "facil",
+    "pregunta": "¿Qué tipo de movimiento macromolecular ocurre en la escala de nanosegundos a microsegundos?",
+    "opciones": {
+      "A": "Vibraciones de enlace covalente",
+      "B": "Movimientos colectivos de grupos de átomos (hélices, láminas beta, dominios)",
+      "C": "Plegamiento completo de la proteína",
+      "D": "Difusión rotacional de proteínas en solución"
+    },
+    "correcta": "B",
+    "explicacion": "Los movimientos colectivos de grupos de átomos como hélices alfa, láminas beta y dominios completos ocurren en la escala de nanosegundos a microsegundos. Los movimientos de solapas en proteasas y los cambios conformacionales de enzimas durante el ciclo catalítico son ejemplos de este tipo de movimientos que son accesibles a simulaciones largas de MD."
+  },
+  {
+    "id": "M7_098",
+    "tema": "UA6 - Mecánica clásica molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué ocurre con la energía potencial durante una simulación de dinámica molecular si el paso de tiempo de integración es demasiado grande?",
+    "opciones": {
+      "A": "La simulación converge más rápidamente al mínimo energético",
+      "B": "La energía potencial se estabiliza en un valor constante",
+      "C": "Se producen inestabilidades numéricas y la energía puede divergir (el sistema 'explota')",
+      "D": "Las vibraciones de enlace se amortiguan automáticamente"
+    },
+    "correcta": "C",
+    "explicacion": "Si el paso de tiempo de integración es demasiado grande, los átomos se mueven demasiado entre pasos, pudiendo solapar con átomos vecinos. Las fuerzas resultantes son enormes (por el término repulsivo de Lennard-Jones que crece con 1/r¹²), generando inestabilidades numéricas y divergencia de la energía (el sistema 'explota'). Por eso los pasos típicos en MD son de 1-2 femtosegundos."
+  },
+  {
+    "id": "M7_099",
+    "tema": "Docking molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Cuál de los siguientes NO es un paso del flujo de trabajo de SwissDock?",
+    "opciones": {
+      "A": "Envío del ligando (submit a ligand)",
+      "B": "Envío del receptor diana (submit a target)",
+      "C": "Síntesis química del ligando seleccionado",
+      "D": "Definición del espacio de búsqueda (define search space)"
+    },
+    "correcta": "C",
+    "explicacion": "El flujo de trabajo de SwissDock consiste en: (1) enviar el ligando, (2) enviar el receptor/diana, (3) definir el espacio de búsqueda, (4) seleccionar parámetros, (5) iniciar el docking. La síntesis química del ligando es un paso experimental que no forma parte de ningún flujo de trabajo computacional de docking."
+  },
+  {
+    "id": "M7_100",
+    "tema": "UEM-CursoBioinfo - Historia y visualización molecular",
+    "dificultad": "medio",
+    "pregunta": "¿Qué es el RMSD y para qué se utiliza en bioinformática estructural?",
+    "opciones": {
+      "A": "Root Mean Square Displacement: mide la velocidad media de los átomos en MD",
+      "B": "Root Mean Square Deviation: mide la diferencia media en posiciones atómicas entre dos estructuras moleculares",
+      "C": "Relative Molecular Structure Descriptor: caracteriza el tamaño de una molécula",
+      "D": "Refined Model Structural Deviation: evalúa la calidad del refinamiento cristalográfico"
+    },
+    "correcta": "B",
+    "explicacion": "El RMSD (Root Mean Square Deviation) mide la desviación cuadrática media entre las posiciones atómicas de dos estructuras: RMSD = √(1/N · Σδᵢ²), donde δᵢ es la distancia entre pares de átomos equivalentes. Se usa para comparar estructuras (predicción vs. experimental), seguir la evolución de una trayectorias de MD, y evaluar poses de docking."
+  },
+  {
+    "id": "M7_101",
+    "tema": "UA2 - Introducción a la estructura molecular",
+    "dificultad": "facil",
+    "pregunta": "¿Qué técnica experimental determina la estructura molecular en solución mediante señales de resonancia de núcleos atómicos?",
+    "opciones": {
+      "A": "Cristalografía de rayos X",
+      "B": "Crioelectromicroscopía (crioEM)",
+      "C": "Espectroscopía de resonancia magnética nuclear (RMN)",
+      "D": "Espectrometría de masas"
+    },
+    "correcta": "C",
+    "explicacion": "La espectroscopía de resonancia magnética nuclear (RMN) determina la estructura de moléculas en solución a resolución atómica, sin necesidad de cristalizar la muestra. Mide las señales de precesión de núcleos activos (¹H, ¹³C, ¹⁵N) en un campo magnético y las distancias entre núcleos cercanos, permitiendo determinar estructuras de proteínas y ácidos nucleicos de hasta ~50 kDa."
+  },
+  {
+    "id": "M7_102",
+    "tema": "UA1 - Introducción al modelado molecular",
+    "dificultad": "dificil",
+    "pregunta": "¿Por qué no es posible aplicar la mecánica cuántica directamente a sistemas biológicos completos como proteínas de 300 aminoácidos?",
+    "opciones": {
+      "A": "Porque la mecánica cuántica no describe correctamente las interacciones carbono-carbono",
+      "B": "Porque el coste computacional de resolver la ecuación de Schrödinger escala aproximadamente como N³ o peor con el número de electrones, haciendo imposible su aplicación a sistemas con miles de átomos",
+      "C": "Porque las proteínas no tienen propiedades cuánticas",
+      "D": "Porque los campos de fuerzas clásicos son siempre más precisos que los métodos cuánticos"
+    },
+    "correcta": "B",
+    "explicacion": "Los métodos cuánticos escalan de forma muy desfavorable con el número de electrones: HF escala como N⁴, MP2 como N⁵, CCSD(T) como N⁷. Una proteína de 300 aminoácidos tiene miles de átomos y decenas de miles de electrones, haciendo imposible cualquier cálculo cuántico explícito. Por eso se usan métodos QM/MM (QM solo en el sitio activo) o campos de fuerzas clásicos para sistemas completos."
+  }
+];
+
+const temas=[...new Set(banco.map(q=>q.tema))].sort();
+const grid=document.getElementById('topicsGrid');
+temas.forEach(t=>{
+  const label=document.createElement('label');
+  label.className='topic-chip';
+  const count=banco.filter(q=>q.tema===t).length;
+  label.innerHTML=`<input type="checkbox" value="${t.replace(/"/g,'&quot;')}"><span>${t} <small style="color:var(--muted)">(${count})</small></span>`;
+  label.querySelector('input').addEventListener('change',updateSelection);
+  grid.appendChild(label);
+});
+
+function getSelected(){return [...document.querySelectorAll('.topic-chip input:checked')].map(i=>i.value);}
+
+function updateSelection(){
+  const sel=getSelected();
+  document.querySelectorAll('.topic-chip').forEach(c=>{
+    c.classList.toggle('selected',c.querySelector('input').checked);
+  });
+  const startBtn=document.getElementById('startBtn');
+  const info=document.getElementById('examInfo');
+  startBtn.disabled=sel.length===0;
+  const total=banco.filter(q=>sel.includes(q.tema)).length;
+  if(sel.length===0){info.textContent='Selecciona al menos un tema para continuar.';}
+  else{info.textContent=`${sel.length} tema(s) → ${total} preguntas disponibles.`;}
+}
+
+document.getElementById('selectAllBtn').addEventListener('click',()=>{
+  document.querySelectorAll('.topic-chip input').forEach(i=>i.checked=true);
+  updateSelection();
+});
+document.getElementById('clearAllBtn').addEventListener('click',()=>{
+  document.querySelectorAll('.topic-chip input').forEach(i=>i.checked=false);
+  updateSelection();
+});
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+let examQuestions=[], state={}, currentIdx=0;
+
+function buildExam(selected){
+  return shuffle(banco.filter(q=>selected.includes(q.tema)));
+}
+
+document.getElementById('startBtn').addEventListener('click',()=>{
+  const sel=getSelected();
+  examQuestions=buildExam(sel);
+  state={answers:new Array(examQuestions.length).fill(null)};
+  currentIdx=0;
+  document.getElementById('homeSection').classList.add('hidden');
+  document.getElementById('statsSection').classList.remove('hidden');
+  document.getElementById('quizCard').classList.remove('hidden');
+  document.getElementById('resultsCard').classList.add('hidden');
+  document.getElementById('correctCounter').textContent='0';
+  document.getElementById('wrongCounter').textContent='0';
+  renderQuestion();
+});
+
+function renderQuestion(){
+  const q=examQuestions[currentIdx];
+  const total=examQuestions.length;
+  document.getElementById('questionCounter').textContent=`${currentIdx+1}/${total}`;
+  document.getElementById('unansweredCounter').textContent=state.answers.filter(a=>a===null).length;
+  document.getElementById('progressBar').style.width=`${((currentIdx+1)/total)*100}%`;
+  document.getElementById('progressText').textContent=`${currentIdx+1} / ${total}`;
+
+  document.getElementById('topicPill').textContent=q.tema;
+  const dpill=document.getElementById('diffPill');
+  const diffLabel={facil:'🟢 Fácil',medio:'🟡 Medio',dificil:'🔴 Difícil'};
+  dpill.textContent=diffLabel[q.dificultad]||q.dificultad;
+  dpill.className='pill '+q.dificultad;
+
+  document.getElementById('questionText').textContent=q.pregunta;
+
+  const optContainer=document.getElementById('options');
+  optContainer.innerHTML='';
+  const letters=['A','B','C','D'];
+  q.opciones.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='option';
+    const text=opt.replace(/^[A-D]\. */,'');
+    btn.innerHTML=`<span class="letter">${letters[i]}</span><span>${text}</span>`;
+    if(state.answers[currentIdx]!==null){
+      btn.disabled=true;
+      const ans=state.answers[currentIdx];
+      if(letters[i]===q.correcta) btn.classList.add('correct');
+      if(ans===letters[i]&&ans!==q.correcta) btn.classList.add('incorrect');
+    }else{
+      btn.addEventListener('click',()=>answerQuestion(letters[i]));
+    }
+    optContainer.appendChild(btn);
+  });
+
+  const fb=document.getElementById('feedback');
+  if(state.answers[currentIdx]!==null){
+    const ans=state.answers[currentIdx];
+    fb.className='feedback visible '+(ans===q.correcta?'ok':'bad');
+    fb.innerHTML=ans===q.correcta
+      ?`<strong>✅ ¡Correcto!</strong> ${q.explicacion}`
+      :`<strong>❌ Incorrecto.</strong> La respuesta correcta es <strong>${q.correcta}</strong>. ${q.explicacion}`;
+  }else{fb.className='feedback';}
+
+  document.getElementById('prevBtn').disabled=currentIdx===0;
+  document.getElementById('nextBtn').textContent=currentIdx===examQuestions.length-1?'Ver resultados':'Siguiente';
+  document.getElementById('skipBtn').disabled=state.answers[currentIdx]!==null;
+}
+
+function answerQuestion(letter){
+  if(state.answers[currentIdx]!==null) return;
+  state.answers[currentIdx]=letter;
+  const q=examQuestions[currentIdx];
+  const isCorrect=letter===q.correcta;
+  const correct=state.answers.filter((a,i)=>a!==null&&a===examQuestions[i].correcta).length;
+  const wrong=state.answers.filter((a,i)=>a!==null&&a!==examQuestions[i].correcta).length;
+  document.getElementById('correctCounter').textContent=correct;
+  document.getElementById('wrongCounter').textContent=wrong;
+  document.getElementById('unansweredCounter').textContent=state.answers.filter(a=>a===null).length;
+  document.querySelectorAll('.option').forEach((btn,i)=>{
+    btn.disabled=true;
+    if(['A','B','C','D'][i]===q.correcta) btn.classList.add('correct');
+    if(['A','B','C','D'][i]===letter&&!isCorrect) btn.classList.add('incorrect');
+  });
+  const fb=document.getElementById('feedback');
+  fb.className='feedback visible '+(isCorrect?'ok':'bad');
+  fb.innerHTML=isCorrect
+    ?`<strong>✅ ¡Correcto!</strong> ${q.explicacion}`
+    :`<strong>❌ Incorrecto.</strong> La respuesta correcta es <strong>${q.correcta}</strong>. ${q.explicacion}`;
+  document.getElementById('skipBtn').disabled=true;
+}
+
+document.getElementById('prevBtn').addEventListener('click',()=>{if(currentIdx>0){currentIdx--;renderQuestion();}});
+document.getElementById('nextBtn').addEventListener('click',()=>{
+  if(currentIdx<examQuestions.length-1){currentIdx++;renderQuestion();}else{showResults();}
+});
+document.getElementById('skipBtn').addEventListener('click',()=>{
+  if(currentIdx<examQuestions.length-1){currentIdx++;renderQuestion();}else{showResults();}
+});
+
+function showResults(){
+  document.getElementById('quizCard').classList.add('hidden');
+  document.getElementById('statsSection').classList.add('hidden');
+  const card=document.getElementById('resultsCard');
+  card.classList.remove('hidden');card.classList.add('visible');
+  const correct=state.answers.filter((a,i)=>a!==null&&a===examQuestions[i].correcta).length;
+  const wrong=state.answers.filter((a,i)=>a!==null&&a!==examQuestions[i].correcta).length;
+  const unanswered=state.answers.filter(a=>a===null).length;
+  const score=correct-wrong*0.25;
+  const grade=(score/examQuestions.length*10).toFixed(2);
+  document.getElementById('finalScore').textContent=score.toFixed(2);
+  document.getElementById('finalGrade').textContent=grade;
+  document.getElementById('finalCorrect').textContent=correct;
+  document.getElementById('finalWrong').textContent=wrong;
+  ['facil','medio','dificil'].forEach(d=>{
+    const qs=examQuestions.filter(q=>q.dificultad===d);
+    const ok=qs.filter(q=>state.answers[examQuestions.indexOf(q)]===q.correcta).length;
+    document.getElementById('res'+d.charAt(0).toUpperCase()+d.slice(1)).textContent=`${ok}/${qs.length}`;
+  });
+  const notice=document.getElementById('noticeBox');
+  if(unanswered>0){notice.style.display='block';notice.textContent=`⚠️ Dejaste ${unanswered} pregunta(s) sin responder.`;}
+  else{notice.style.display='none';}
+}
+
+document.getElementById('restartBtn').addEventListener('click',()=>{
+  document.getElementById('resultsCard').classList.add('hidden');
+  document.getElementById('resultsCard').classList.remove('visible');
+  document.getElementById('reviewSection').classList.add('hidden');
+  document.getElementById('homeSection').classList.remove('hidden');
+});
+
+document.getElementById('reviewBtn').addEventListener('click',()=>{
+  const rev=document.getElementById('reviewSection');
+  rev.classList.toggle('hidden');
+  if(!rev.classList.contains('hidden')){
+    rev.innerHTML='';
+    examQuestions.forEach((q,i)=>{
+      const ans=state.answers[i];
+      const isCorrect=ans===q.correcta;
+      const isUnanswered=ans===null;
+      const div=document.createElement('div');
+      div.className='review-item '+(isUnanswered?'unanswered':isCorrect?'correct':'incorrect');
+      div.innerHTML=`<strong>${i+1}. ${q.pregunta}</strong><br>
+        Tu respuesta: <strong>${isUnanswered?'Sin responder':ans}</strong> &nbsp;|&nbsp; Correcta: <strong>${q.correcta}</strong><br>
+        <small style="color:var(--muted)">${q.explicacion}</small>`;
+      rev.appendChild(div);
+    });
+  }
+});
+</script>
+</body>
+</html>
